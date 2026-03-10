@@ -18,6 +18,8 @@ export default [
       'modules/*/build/**',
       '*.config.js',
       'babel.config.js',
+      'jest.config.js',
+      'jest.setup.js',
     ],
   },
   {
