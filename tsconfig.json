@@ -15,7 +15,8 @@
       "@navigation/*": ["src/navigation/*"],
       "@hooks/*": ["src/hooks/*"],
       "@assets/*": ["src/assets/*"],
-      "native-util": ["modules/native-util/src"]
+      "native-util": ["modules/native-util/src"],
+      "shortcut": ["modules/shortcut/src"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],

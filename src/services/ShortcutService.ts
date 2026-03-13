@@ -8,20 +8,9 @@
  * tapping them triggers the isQuickTile flow in App.tsx.
  */
 
-import { NativeModules, Platform } from 'react-native';
+import { Platform } from 'react-native';
+import { requestPinShortcut, isShortcutModuleAvailable } from 'shortcut';
 import { lightColors } from '../theme';
-
-interface NativeShortcutModule {
-  requestPinShortcut(
-    shortcutId: string,
-    label: string,
-    url: string,
-    iconResName: string,
-    bgColorHex: string
-  ): Promise<boolean>;
-}
-
-const NativeShortcut: NativeShortcutModule | undefined = NativeModules.ShortcutModule;
 
 export const ShortcutService = {
   /**
@@ -32,16 +21,19 @@ export const ShortcutService = {
     if (Platform.OS !== 'android') {
       return Promise.reject(new Error('Home-screen shortcuts are only supported on Android'));
     }
-    if (!NativeShortcut) {
+    if (!isShortcutModuleAvailable) {
       return Promise.reject(new Error('ShortcutModule is not available'));
     }
-    return NativeShortcut.requestPinShortcut(
+    return requestPinShortcut(
       'shortcut_download',
       '下载剪贴板',
       'syncclipboard://quick-tile',
       'ic_tile_download',
       lightColors.primary
-    );
+    ).catch((error) => {
+      console.error('ShortcutModule addDownloadShortcut error:', error);
+      throw error;
+    });
   },
 
   /**
@@ -52,15 +44,18 @@ export const ShortcutService = {
     if (Platform.OS !== 'android') {
       return Promise.reject(new Error('Home-screen shortcuts are only supported on Android'));
     }
-    if (!NativeShortcut) {
+    if (!isShortcutModuleAvailable) {
       return Promise.reject(new Error('ShortcutModule is not available'));
     }
-    return NativeShortcut.requestPinShortcut(
+    return requestPinShortcut(
       'shortcut_upload',
       '上传剪贴板',
       'syncclipboard://quick-tile-upload',
       'ic_tile_upload',
       lightColors.primary
-    );
+    ).catch((error) => {
+      console.error('ShortcutModule addUploadShortcut error:', error);
+      throw error;
+    });
   },
 };

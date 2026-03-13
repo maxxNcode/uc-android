@@ -21,6 +21,7 @@ module.exports = function (api) {
             '@hooks': './src/hooks',
             '@assets': './src/assets',
             'native-util': './modules/native-util/src',
+            'shortcut': './modules/shortcut/src',
           },
         },
       ],
