@@ -214,7 +214,12 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
               <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
                 服务器类型
               </Text>
-              <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+              <View
+                style={[
+                  styles.card,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+                ]}
+              >
                 <TouchableOpacity
                   style={[
                     styles.typeOption,
@@ -269,7 +274,12 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
               <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
                 连接信息
               </Text>
-              <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+              <View
+                style={[
+                  styles.card,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+                ]}
+              >
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: theme.colors.text }]}>服务器地址</Text>
                   <TextInput
@@ -435,10 +445,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     borderRadius: 12,
     padding: 16,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
   },
   typeOption: {
     flexDirection: 'row',

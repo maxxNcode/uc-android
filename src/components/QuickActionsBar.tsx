@@ -113,10 +113,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingBottom: Platform.OS === 'ios' ? 24 : 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 8,
   },
   button: {
     flex: 1,
@@ -146,10 +142,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 10,
     marginHorizontal: 8,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 4,
   },
   syncButtonIcon: {
     fontSize: 22,

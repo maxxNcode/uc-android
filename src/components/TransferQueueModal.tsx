@@ -65,7 +65,12 @@ export const TransferQueueModal: React.FC<TransferQueueModalProps> = ({ visible,
     const statusColor = statusColors[task.status] || theme.colors.textSecondary;
 
     return (
-      <View style={[styles.taskItem, { backgroundColor: theme.colors.background }]}>
+      <View
+        style={[
+          styles.taskItem,
+          { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
+        ]}
+      >
         <View style={styles.taskHeader}>
           <View style={[styles.taskTypeIcon, { backgroundColor: theme.colors.primaryLight }]}>
             {task.type === 'upload' ? (
@@ -257,6 +262,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
+    borderWidth: 1,
   },
   taskHeader: {
     flexDirection: 'row',

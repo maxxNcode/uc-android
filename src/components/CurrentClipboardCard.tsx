@@ -76,7 +76,12 @@ export const CurrentClipboardCard: React.FC<CurrentClipboardCardProps> = ({
 
   if (!clipboard) {
     return (
-      <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+        ]}
+      >
         <View style={styles.emptyContent}>
           <Text style={[styles.emptyIcon, { color: theme.colors.textTertiary }]}>📋</Text>
           <Text style={[styles.emptyTitle, { color: theme.colors.textSecondary }]}>剪贴板为空</Text>
@@ -223,7 +228,12 @@ export const CurrentClipboardCard: React.FC<CurrentClipboardCardProps> = ({
   };
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+      ]}
+    >
       {/* 标题栏 */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -431,10 +441,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
     padding: 16,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
   },
   emptyContent: {
     alignItems: 'center',

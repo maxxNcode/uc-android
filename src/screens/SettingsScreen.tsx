@@ -27,7 +27,7 @@ import { ServerConfigModal, ServerListItem, MessageToast } from '@/components';
 import { ServerConfig } from '@/types/api';
 import { useMessageToast } from '@/hooks/useMessageToast';
 import { ShortcutService, checkForUpdate } from '@/services';
-import { Plus, RefreshCw } from 'react-native-feather';
+import { Plus, RefreshCw, Check } from 'react-native-feather';
 
 export const SettingsScreen = () => {
   const { theme, themeMode, setThemeMode } = useTheme();
@@ -470,7 +470,12 @@ export const SettingsScreen = () => {
             <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>同步设置</Text>
           </View>
 
-          <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+            ]}
+          >
             <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
               <View style={styles.settingInfo}>
                 <Text style={[styles.settingLabel, { color: theme.colors.text }]}>自动复制</Text>
@@ -548,7 +553,12 @@ export const SettingsScreen = () => {
             <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>快捷操作</Text>
           </View>
 
-          <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+            ]}
+          >
             <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
               <View style={styles.settingInfo}>
                 <Text style={[styles.settingLabel, { color: theme.colors.text }]}>
@@ -592,7 +602,12 @@ export const SettingsScreen = () => {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+            ]}
+          >
             <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
               <View style={styles.settingInfo}>
                 <Text style={[styles.settingLabel, { color: theme.colors.text }]}>
@@ -657,25 +672,34 @@ export const SettingsScreen = () => {
         {/* 主题设置部分 */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderBase}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>外观</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>主题</Text>
           </View>
 
-          <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>主题模式</Text>
-
-            {themeOptions.map((option) => (
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+            ]}
+          >
+            {themeOptions.map((option, index) => (
               <TouchableOpacity
                 key={option.value}
-                style={[styles.optionItem, { borderBottomColor: theme.colors.divider }]}
+                style={[
+                  styles.optionItem,
+                  index < themeOptions.length - 1
+                    ? {
+                        borderBottomWidth: StyleSheet.hairlineWidth,
+                        borderBottomColor: theme.colors.divider,
+                      }
+                    : undefined,
+                ]}
                 onPress={() => setThemeMode(option.value)}
               >
                 <Text style={[styles.optionLabel, { color: theme.colors.text }]}>
                   {option.label}
                 </Text>
                 {themeMode === option.value && (
-                  <View style={[styles.checkmark, { backgroundColor: theme.colors.primary }]}>
-                    <Text style={[styles.checkmarkIcon, { color: theme.colors.surface }]}>✓</Text>
-                  </View>
+                  <Check stroke={theme.colors.primary} width={22} height={22} strokeWidth={3} />
                 )}
               </TouchableOpacity>
             ))}
@@ -688,8 +712,21 @@ export const SettingsScreen = () => {
             <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>关于</Text>
           </View>
 
-          <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-            <View style={[styles.versionBlock, { borderBottomColor: theme.colors.divider }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+            ]}
+          >
+            <View
+              style={[
+                styles.versionBlock,
+                {
+                  borderBottomWidth: StyleSheet.hairlineWidth,
+                  borderBottomColor: theme.colors.divider,
+                },
+              ]}
+            >
               <View style={styles.versionTopRow}>
                 <View style={styles.versionLabelGroup}>
                   <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>
@@ -764,7 +801,7 @@ export const SettingsScreen = () => {
               />
             </View>
 
-            <View style={styles.settingRow}>
+            <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
               <View style={styles.settingInfo}>
                 <Text style={[styles.settingLabel, { color: theme.colors.text }]}>调试模式</Text>
               </View>
@@ -844,10 +881,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 32,
     alignItems: 'center',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   emptyText: {
     fontSize: 16,
@@ -862,10 +895,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     borderRadius: 12,
     overflow: 'hidden',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
   },
   cardTitle: {
     fontSize: 15,
@@ -880,21 +910,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   optionLabel: {
     fontSize: 16,
-  },
-  checkmark: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkmarkIcon: {
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   infoRow: {
     flexDirection: 'row',
@@ -956,7 +974,6 @@ const styles = StyleSheet.create({
   versionBlock: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   versionTopRow: {
     flexDirection: 'row',

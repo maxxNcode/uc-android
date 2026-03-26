@@ -402,7 +402,12 @@ export const HistoryListItem = forwardRef<HistoryListItemHandle, HistoryListItem
             underlayColor={theme.colors.border}
             style={styles.touchable}
           >
-            <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
+            <View
+              style={[
+                styles.container,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+              ]}
+            >
               {/* 顶部内容区 */}
               <View style={styles.topContent}>
                 {/* 左侧图标 */}
@@ -777,10 +782,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     padding: 12,
     borderRadius: 12,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    borderWidth: 1,
   },
   topContent: {
     flexDirection: 'row',
