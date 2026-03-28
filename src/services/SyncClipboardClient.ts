@@ -128,6 +128,7 @@ export class SyncClipboardClient extends APIClient implements ISyncClipboardAPI,
    */
   async putContent(content: ClipboardContent, options?: PutContentOptions): Promise<void> {
     const signal = options?.signal;
+    const onProgress = options?.onProgress;
 
     console.log('[SyncClipboardClient] putContent - Starting:', {
       type: content.type,
@@ -184,7 +185,7 @@ export class SyncClipboardClient extends APIClient implements ISyncClipboardAPI,
       const fileUri = content.fileUri || undefined;
 
       try {
-        await this.uploadRecord(record, fileUri, signal);
+        await this.uploadRecord(record, fileUri, signal, onProgress);
         console.log('[SyncClipboardClient] History record uploaded successfully');
       } catch (error) {
         if (error instanceof SyncConflictError) {

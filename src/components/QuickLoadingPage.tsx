@@ -16,6 +16,8 @@ import {
 } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import type { ClipboardContent } from '@/types/clipboard';
+import type { ProgressInfo } from 'native-util';
+import { formatFileSize } from '@/utils';
 
 type LoadingState = 'loading' | 'success' | 'error';
 
@@ -26,22 +28,16 @@ export interface SuccessButtonConfig {
 }
 
 export interface QuickLoadingPageProps {
-  /** 要执行的异步任务。抛出异常则进入 error 状态。接收 AbortSignal 用于取消操作。 */
   task: (signal: AbortSignal) => Promise<void>;
   loadingText: string;
   successText: string;
   failureText: string;
   onComplete: () => void;
-  /**
-   * 成功后预览的剪贴板内容：文本显示文字、图片显示缩略图、文件显示文件名。
-   * 提供时禁用自动关闭，页面停留并显示"返回"按钮等待用户操作。
-   */
   successContent?: ClipboardContent;
-  /**
-   * 成功后与"返回"按钮并排显示的额外按钮（如打开、分享）。
-   * 提供时禁用自动关闭，页面停留并显示按钮行等待用户操作。
-   */
   successButtons?: SuccessButtonConfig[];
+  progress?: ProgressInfo | null;
+  previewText?: string;
+  previewImage?: string;
 }
 
 export const QuickLoadingPage: React.FC<QuickLoadingPageProps> = ({
@@ -52,6 +48,9 @@ export const QuickLoadingPage: React.FC<QuickLoadingPageProps> = ({
   onComplete,
   successContent,
   successButtons,
+  progress,
+  previewText,
+  previewImage,
 }) => {
   const { theme } = useTheme();
   const [state, setState] = useState<LoadingState>('loading');
@@ -137,6 +136,34 @@ export const QuickLoadingPage: React.FC<QuickLoadingPageProps> = ({
           <>
             <ActivityIndicator size="large" color={theme.colors.primary} />
             <Text style={[styles.statusText, { color: theme.colors.text }]}>{loadingText}</Text>
+            {previewImage && (
+              <Image source={{ uri: previewImage }} style={styles.loadingPreviewImage} />
+            )}
+            {previewText && (
+              <Text style={[styles.loadingPreviewText, { color: theme.colors.textSecondary }]}>
+                {previewText}
+              </Text>
+            )}
+            {progress && progress.totalBytes > 0 && (
+              <View style={styles.progressContainer}>
+                <View style={[styles.progressBar, { backgroundColor: theme.colors.border }]}>
+                  <View
+                    style={[
+                      styles.progressFill,
+                      {
+                        backgroundColor: theme.colors.primary,
+                        width: `${progress.progress * 100}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={[styles.progressText, { color: theme.colors.textSecondary }]}>
+                  {(progress.progress * 100).toFixed(0)}%{' '}
+                  {formatFileSize(progress.bytesTransferred)} /{' '}
+                  {formatFileSize(progress.totalBytes)}
+                </Text>
+              </View>
+            )}
             <TouchableOpacity
               style={[
                 styles.button,
@@ -343,6 +370,36 @@ const styles = StyleSheet.create({
   },
   buttonOutline: {
     borderWidth: 1,
+  },
+  loadingPreviewText: {
+    fontSize: 14,
+    textAlign: 'center',
+    maxWidth: 280,
+  },
+  loadingPreviewImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 8,
+    resizeMode: 'cover',
+  },
+  progressContainer: {
+    width: '100%',
+    maxWidth: 280,
+    alignItems: 'center',
+    gap: 8,
+  },
+  progressBar: {
+    width: '100%',
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 13,
   },
   previewImage: {
     width: '100%',

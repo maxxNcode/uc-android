@@ -11,6 +11,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { uploadFileAndAddToHistory } from '@/utils/uploadFile';
 import { QuickLoadingPage } from '@/components/QuickLoadingPage';
+import type { ProgressInfo } from 'native-util';
 
 interface ShareReceiveScreenProps {
   onComplete: () => void;
@@ -36,6 +37,9 @@ export const ShareReceiveScreen: React.FC<ShareReceiveScreenProps> = ({ onComple
   const [hasShareContent] = useState(() => getSharedPayloads().length > 0);
   const activeServer = useSettingsStore((s) => s.getActiveServer());
   const [loadingText, setLoadingText] = useState('正在处理文件…');
+  const [progress, setProgress] = useState<ProgressInfo | null>(null);
+  const [previewText, setPreviewText] = useState<string | undefined>(undefined);
+  const [previewImage, setPreviewImage] = useState<string | undefined>(undefined);
 
   // 挂载时若根本没有分享内容，直接返回
   useEffect(() => {
@@ -60,6 +64,12 @@ export const ShareReceiveScreen: React.FC<ShareReceiveScreenProps> = ({ onComple
         const ext = getFileExtFromMime(contentMime);
         fileName = `shared_${Date.now()}${ext}`;
       }
+      setPreviewText(fileName);
+
+      // 如果是图片类型，设置预览图片
+      if (contentMime?.startsWith('image/')) {
+        setPreviewImage(payload.contentUri);
+      }
 
       await uploadFileAndAddToHistory(
         payload.contentUri,
@@ -67,7 +77,13 @@ export const ShareReceiveScreen: React.FC<ShareReceiveScreenProps> = ({ onComple
         contentMime,
         undefined,
         activeServer,
-        { signal, onProgress: setLoadingText }
+        {
+          signal,
+          onProgress: (stage, info) => {
+            setLoadingText(stage);
+            setProgress(info ?? null);
+          },
+        }
       );
       clearSharedPayloads();
     },
@@ -96,6 +112,9 @@ export const ShareReceiveScreen: React.FC<ShareReceiveScreenProps> = ({ onComple
       successText="接收并上传成功"
       failureText="处理失败"
       onComplete={onComplete}
+      progress={progress}
+      previewText={previewText}
+      previewImage={previewImage}
     />
   );
 };

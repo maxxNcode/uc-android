@@ -13,6 +13,7 @@ import { X, Upload, Download, AlertCircle, Clock, CheckCircle } from 'react-nati
 import { useTheme } from '@/hooks/useTheme';
 import { useTransferQueueStore } from '@/stores/transferQueueStore';
 import { TransferTask, getHistoryTransferQueue } from '@/services/HistoryTransferQueue';
+import { formatFileSize } from '@/utils';
 
 interface TransferQueueModalProps {
   visible: boolean;
@@ -27,14 +28,6 @@ const statusLabels: Record<string, string> = {
   cancelled: '已取消',
   waitForRetry: '等待重试',
 };
-
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-}
 
 const statusColors: Record<string, string> = {
   pending: '#FFA726',
@@ -105,13 +98,13 @@ export const TransferQueueModal: React.FC<TransferQueueModalProps> = ({ visible,
                 <Text style={[styles.progressText, { color: theme.colors.textSecondary }]}>
                   {Math.round(task.progress)}%
                   {task.totalBytes
-                    ? ` (${formatBytes(task.bytesTransferred)}/${formatBytes(task.totalBytes)})`
+                    ? ` (${formatFileSize(task.bytesTransferred)}/${formatFileSize(task.totalBytes)})`
                     : ''}
                 </Text>
               )}
               {task.status === 'running' && task.progress < 0 && (
                 <Text style={[styles.progressText, { color: theme.colors.textSecondary }]}>
-                  {formatBytes(task.bytesTransferred)}
+                  {formatFileSize(task.bytesTransferred)}
                 </Text>
               )}
             </View>

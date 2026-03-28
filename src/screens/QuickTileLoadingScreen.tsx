@@ -6,6 +6,7 @@ import { SyncManager } from '@/services/SyncManager';
 import { useSyncStore } from '@/stores/syncStore';
 import { openFile, shareFile, saveFile, saveToGallery } from '@/utils/fileActions';
 import { QuickLoadingPage, SuccessButtonConfig } from '@/components/QuickLoadingPage';
+import type { ProgressInfo } from 'native-util';
 
 interface QuickTileLoadingScreenProps {
   direction: SyncDirection;
@@ -20,10 +21,14 @@ export const QuickTileLoadingScreen: React.FC<QuickTileLoadingScreenProps> = ({
 
   // 用 state 存储下载的文件内容，触发重渲染以更新 successButtons prop
   const [fileContent, setFileContent] = useState<ClipboardContent | null>(null);
+  const [progress, setProgress] = useState<ProgressInfo | null>(null);
+  const [previewText, setPreviewText] = useState<string | undefined>(undefined);
 
   const task = useCallback(
     async (signal: AbortSignal) => {
       setFileContent(null);
+      setProgress(null);
+      setPreviewText(undefined);
 
       // 确保 SyncManager 已初始化（冷启动时尚未经过正常启动流程）
       await useSyncStore.getState().initialize();
@@ -31,7 +36,13 @@ export const QuickTileLoadingScreen: React.FC<QuickTileLoadingScreenProps> = ({
       if (initError) throw new Error(initError);
 
       const syncMgr = SyncManager.getInstance();
-      const result = await syncMgr.sync(direction, false, signal);
+      const result = await syncMgr.sync(
+        direction,
+        false,
+        signal,
+        (info) => setProgress(info),
+        (preview) => setPreviewText(preview)
+      );
 
       if (!result.success) {
         throw new Error(result.error || (isUpload ? '上传失败' : '同步失败'));
@@ -106,6 +117,8 @@ export const QuickTileLoadingScreen: React.FC<QuickTileLoadingScreenProps> = ({
       onComplete={onLoadingComplete}
       successContent={fileContent ?? undefined}
       successButtons={successButtons}
+      progress={progress}
+      previewText={previewText}
     />
   );
 };

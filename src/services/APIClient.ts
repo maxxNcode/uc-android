@@ -7,7 +7,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 import { AuthService } from './AuthService';
 import { ProfileDto, ServerInfo } from '../types/api';
 import type { ClipboardContent } from '../types/clipboard';
-import { nativeDownloadFile } from 'native-util';
+import { nativeDownloadFile, type ProgressInfo } from 'native-util';
 import {
   APIError,
   AuthenticationError,
@@ -44,11 +44,16 @@ export interface APIClientConfig {
 
 export interface PutContentOptions {
   signal?: AbortSignal;
+  onProgress?: (info: ProgressInfo) => void;
 }
 
 /**
  * SyncClipboard API 接口（基础功能）
  */
+export interface DownloadProgressCallback {
+  (info: ProgressInfo): void;
+}
+
 export interface ISyncClipboardAPI {
   /** 获取剪贴板配置 */
   getClipboard(signal?: AbortSignal): Promise<ProfileDto>;
@@ -57,7 +62,12 @@ export interface ISyncClipboardAPI {
   putClipboard(profile: ProfileDto, signal?: AbortSignal): Promise<void>;
 
   /** 直接下载文件到指定路径（优化内存占用） */
-  downloadFile(fileName: string, destinationUri: string, signal?: AbortSignal): Promise<string>;
+  downloadFile(
+    fileName: string,
+    destinationUri: string,
+    signal?: AbortSignal,
+    onProgress?: DownloadProgressCallback
+  ): Promise<string>;
 
   /** 上传文件数据 */
   putFile(fileName: string, fileUri: string, signal?: AbortSignal): Promise<void>;
@@ -374,7 +384,8 @@ export abstract class APIClient {
   async downloadFile(
     fileName: string,
     destinationUri: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    onProgress?: DownloadProgressCallback
   ): Promise<string> {
     if (!fileName) {
       throw new ConfigurationError('File name is required');
@@ -389,7 +400,7 @@ export abstract class APIClient {
 
       console.log(`[${this.constructor.name}] Downloading file ${fileName} to ${destinationUri}`);
 
-      await nativeDownloadFile(url, headers, destinationUri, signal);
+      await nativeDownloadFile(url, headers, destinationUri, signal, onProgress);
 
       console.log(`[${this.constructor.name}] File downloaded successfully: ${fileName}`);
       return destinationUri;

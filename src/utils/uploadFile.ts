@@ -5,7 +5,7 @@
  */
 
 import { File } from 'expo-file-system';
-import { nativeCopyFile } from 'native-util';
+import { nativeCopyFile, type ProgressInfo } from 'native-util';
 import { calculateFileProfileHash } from '@/utils/hash';
 import { prepareTempFilePath } from '@/utils/fileStorage';
 import { useHistoryStore } from '@/stores/historyStore';
@@ -23,8 +23,7 @@ function guessContentType(mimeType: string | null | undefined): ClipboardContent
 
 export interface UploadFileOptions {
   signal?: AbortSignal;
-  /** 各阶段进度文字回调，供 UI 动态更新 loading 文本 */
-  onProgress?: (stage: string) => void;
+  onProgress?: (stage: string, progress?: ProgressInfo) => void;
 }
 
 export interface ImportResult {
@@ -35,11 +34,6 @@ export interface ImportResult {
   contentType: ClipboardContentType;
 }
 
-/**
- * importFileToHistory
- * 将本地文件（content:// 或 file:// URI）复制到内部存储并添加到历史记录，不上传到服务器。
- * 供历史记录页面"添加文件"菜单调用，也可被 uploadFileAndAddToHistory 内部调用。
- */
 export async function importFileToHistory(
   sourceUri: string,
   fileName: string,
@@ -79,14 +73,6 @@ export async function importFileToHistory(
   };
 }
 
-/**
- * @param sourceUri   原始文件 URI（content:// 或 file://）
- * @param fileName    文件名（含扩展名）
- * @param mimeType    MIME 类型（可选，用于推断内容类型）
- * @param fileSize    文件大小（字节，可选，若为 undefined 则从复制后文件读取）
- * @param activeServer 目标服务器配置
- * @param options     可传入 AbortSignal 以支持取消
- */
 export async function uploadFileAndAddToHistory(
   sourceUri: string,
   fileName: string,
@@ -111,7 +97,10 @@ export async function uploadFileAndAddToHistory(
 
   const apiClient = createAPIClient(activeServer);
   options?.onProgress?.('正在上传文件…');
-  await apiClient.putContent(content, options);
+  await apiClient.putContent(content, {
+    signal: options?.signal,
+    onProgress: (info) => options?.onProgress?.('正在上传文件…', info),
+  });
 
   await useHistoryStore.getState().updateItem(result.profileHash, { synced: true });
 }

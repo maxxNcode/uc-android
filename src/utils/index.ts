@@ -28,12 +28,25 @@ export const getClipboardTypeName = (type: ClipboardContentType): string => {
 /**
  * Format file size to human readable string
  */
-export const formatFileSize = (bytes: number): string => {
+export const formatFileSize = (bytes: number, decimals: number = 1): string => {
   if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+  return `${(bytes / Math.pow(k, i)).toFixed(decimals)} ${sizes[i]}`;
+};
+
+/**
+ * Format size with type awareness
+ * Text type shows character count with locale formatting
+ * Other types show file size
+ */
+export const formatSizeWithType = (bytes?: number, type?: string): string => {
+  if (!bytes) return '';
+  if (type === 'Text') {
+    return bytes.toLocaleString('zh-CN');
+  }
+  return formatFileSize(bytes);
 };
 
 /**

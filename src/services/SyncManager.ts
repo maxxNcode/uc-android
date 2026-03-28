@@ -13,6 +13,7 @@ import { clipboardMonitor } from './ClipboardMonitor';
 import { ConfigurationError } from './errors';
 import { ServerConfig, ProfileDto } from '../types/api';
 import { compareHash } from '../utils/hash';
+import type { ProgressInfo } from 'native-util';
 import {
   SyncConfig,
   SyncStatus,
@@ -168,7 +169,9 @@ export class SyncManager {
   public async sync(
     direction: SyncDirection = SyncDirection.Both,
     isAuto: boolean = false,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    onProgress?: (info: ProgressInfo) => void,
+    onPreview?: (preview: string) => void
   ): Promise<SyncResult> {
     if (!this.config || !this.apiClient) {
       throw new Error('SyncManager not initialized');
@@ -195,16 +198,16 @@ export class SyncManager {
 
       switch (direction) {
         case SyncDirection.Upload:
-          result = await this.upload(isAuto, signal);
+          result = await this.upload(isAuto, signal, onProgress, onPreview);
           break;
         case SyncDirection.Download:
-          result = await this.download(isAuto, signal);
+          result = await this.download(isAuto, signal, onProgress, onPreview);
           break;
         case SyncDirection.Both:
           // 先下载后上传，避免覆盖远程内容
-          const downloadResult = await this.download(isAuto, signal);
+          const downloadResult = await this.download(isAuto, signal, onProgress, onPreview);
           if (downloadResult.success || downloadResult.skipped) {
-            const uploadResult = await this.upload(isAuto, signal);
+            const uploadResult = await this.upload(isAuto, signal, onProgress, onPreview);
             result = uploadResult;
           } else {
             result = downloadResult;
@@ -264,7 +267,12 @@ export class SyncManager {
   /**
    * 上传剪贴板内容
    */
-  private async upload(isAuto: boolean = false, signal?: AbortSignal): Promise<SyncResult> {
+  private async upload(
+    isAuto: boolean = false,
+    signal?: AbortSignal,
+    onProgress?: (info: ProgressInfo) => void,
+    onPreview?: (preview: string) => void
+  ): Promise<SyncResult> {
     if (!this.apiClient || !this.config) {
       throw new Error('SyncManager not initialized');
     }
@@ -284,6 +292,16 @@ export class SyncManager {
           direction: SyncDirection.Upload,
           skipped: true,
         };
+      }
+
+      // 调用预览回调
+      if (onPreview) {
+        if (localContent.type === 'Text' && localContent.text) {
+          const preview = localContent.text.trim().replace(/\s+/g, ' ');
+          onPreview(preview.length > 40 ? preview.slice(0, 40) + '…' : preview);
+        } else if (localContent.type !== 'Text' && localContent.fileName) {
+          onPreview(localContent.fileName);
+        }
       }
 
       // 计算当前 profileHash
@@ -336,7 +354,7 @@ export class SyncManager {
       });
 
       // 使用 putContent 统一处理：先上传数据（如果有），再上传配置
-      await this.apiClient.putContent(localContent, { signal });
+      await this.apiClient.putContent(localContent, { signal, onProgress });
 
       console.log('[SyncManager] Content uploaded successfully');
 
@@ -398,7 +416,12 @@ export class SyncManager {
   /**
    * 下载剪贴板内容
    */
-  private async download(isAuto: boolean = false, signal?: AbortSignal): Promise<SyncResult> {
+  private async download(
+    isAuto: boolean = false,
+    signal?: AbortSignal,
+    onProgress?: (info: ProgressInfo) => void,
+    onPreview?: (preview: string) => void
+  ): Promise<SyncResult> {
     if (!this.apiClient || !this.config) {
       throw new Error('SyncManager not initialized');
     }
@@ -416,6 +439,16 @@ export class SyncManager {
       }
 
       const remoteProfileHash = profile.hash;
+
+      // 调用预览回调
+      if (onPreview) {
+        if (profile.type === 'Text' && profile.hasData && profile.text) {
+          const preview = profile.text.trim().replace(/\s+/g, ' ');
+          onPreview(preview.length > 40 ? preview.slice(0, 40) + '…' : preview);
+        } else if (profile.hasData && profile.dataName) {
+          onPreview(profile.dataName);
+        }
+      }
 
       // 如果远程内容未变化，跳过下载（仅在自动同步时）
       if (
@@ -446,7 +479,7 @@ export class SyncManager {
 
           if (resolution === 'local') {
             // 使用本地版本，上传覆盖远程
-            return await this.upload(isAuto, signal);
+            return await this.upload(isAuto, signal, onProgress, onPreview);
           } else if (resolution === 'skip') {
             // 跳过此次同步
             return {
@@ -468,7 +501,13 @@ export class SyncManager {
       // 如果有文件数据，优先从历史记录读取缓存，否则下载并保存到历史记录
       if (profile.hasData && profile.dataName) {
         const { downloadAndAddToHistory } = await import('../utils/remoteClipboard');
-        const updatedContent = await downloadAndAddToHistory(content, this.apiClient, true, signal);
+        const updatedContent = await downloadAndAddToHistory(
+          content,
+          this.apiClient,
+          true,
+          signal,
+          onProgress
+        );
         content.fileUri = updatedContent.fileUri;
       }
 

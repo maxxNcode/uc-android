@@ -10,6 +10,13 @@ import { ClipboardContent } from '@/types/clipboard';
 import { useSettingsStore } from '@/stores';
 import { useMessageStore } from '@/stores/messageStore';
 import { openFile, shareFile, saveFile, saveToGallery } from '@/utils/fileActions';
+import { formatFileSize, formatSizeWithType } from '@/utils';
+
+interface DownloadProgress {
+  progress: number;
+  bytesTransferred: number;
+  totalBytes: number;
+}
 
 interface CurrentClipboardCardProps {
   clipboard: ClipboardContent | null;
@@ -19,6 +26,7 @@ interface CurrentClipboardCardProps {
   onCancelUpload?: () => void;
   onDownload?: () => void;
   downloading?: boolean;
+  downloadProgress?: DownloadProgress | null;
   onCancelDownload?: () => void;
   onCopy: (content: ClipboardContent) => Promise<void>;
 }
@@ -31,6 +39,7 @@ export const CurrentClipboardCard: React.FC<CurrentClipboardCardProps> = ({
   onCancelUpload,
   onDownload,
   downloading = false,
+  downloadProgress,
   onCancelDownload,
   onCopy,
 }) => {
@@ -119,18 +128,6 @@ export const CurrentClipboardCard: React.FC<CurrentClipboardCardProps> = ({
       default:
         return '未知';
     }
-  };
-
-  const formatSize = (bytes?: number, type?: string): string => {
-    if (!bytes) return '';
-    // Text 类型显示字符数（添加千分位逗号）
-    if (type === 'Text') {
-      return bytes.toLocaleString('zh-CN');
-    }
-    // 其他类型显示文件大小
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const formatTime = (timestamp: number): string => {
@@ -263,7 +260,7 @@ export const CurrentClipboardCard: React.FC<CurrentClipboardCardProps> = ({
 
         {clipboard.fileSize !== undefined && (
           <Text style={[styles.sizeLabel, { color: theme.colors.textSecondary }]}>
-            {formatSize(clipboard.fileSize, clipboard.type)}
+            {formatSizeWithType(clipboard.fileSize, clipboard.type)}
           </Text>
         )}
       </View>
@@ -425,6 +422,17 @@ export const CurrentClipboardCard: React.FC<CurrentClipboardCardProps> = ({
             ]}
             onPress={downloading ? onCancelDownload : onDownload}
           >
+            {downloading && downloadProgress && (
+              <View
+                style={[
+                  styles.progressFill,
+                  {
+                    backgroundColor: theme.colors.primary,
+                    width: `${downloadProgress.progress * 100}%`,
+                  },
+                ]}
+              />
+            )}
             <Text
               style={[
                 styles.actionButtonText,
@@ -432,7 +440,11 @@ export const CurrentClipboardCard: React.FC<CurrentClipboardCardProps> = ({
                 { color: theme.colors.primary },
               ]}
             >
-              {downloading ? '取消' : '下载'}
+              {downloading && downloadProgress
+                ? `${(downloadProgress.progress * 100).toFixed(0)}%  ${formatFileSize(downloadProgress.bytesTransferred)} / ${formatFileSize(downloadProgress.totalBytes)}`
+                : downloading
+                  ? '取消'
+                  : '下载'}
             </Text>
           </TouchableOpacity>
         )}
@@ -517,6 +529,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    overflow: 'hidden',
   },
   actionButtonLast: {
     marginRight: 0,
@@ -557,5 +570,12 @@ const styles = StyleSheet.create({
   hashLabel: {
     fontSize: 11,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  progressFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    opacity: 0.15,
   },
 });

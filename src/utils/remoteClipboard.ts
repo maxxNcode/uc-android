@@ -8,29 +8,20 @@ import {
   createDefaultClipboardItem,
   HistorySyncStatus,
 } from '../types/clipboard';
-import { ISyncClipboardAPI } from '../services/APIClient';
+import { ISyncClipboardAPI, type DownloadProgressCallback } from '../services/APIClient';
 import { historyStorage } from '../services/HistoryStorage';
 import { useHistoryStore } from '../stores/historyStore';
 import { prepareTempFilePath } from './fileStorage';
 import { calculateFileProfileHash } from './hash';
 
-/**
- * 下载远程文件并添加到历史记录
- * - 优先从历史记录缓存读取（避免重复下载）
- * - 缓存未命中时直接流式下载到磁盘，不把文件数据加载进内存
- * - 下载完成后将条目写入历史记录
- *
- * @param content   待填充 fileUri 的 ClipboardContent
- * @param apiClient 用于执行下载的 API 客户端
- * @param hasData   profile 是否携带附件
- * @param signal    可选的 AbortSignal 用于取消操作
- * @returns 含有 fileUri 的更新后 ClipboardContent
- */
+export type { DownloadProgressCallback };
+
 export async function downloadAndAddToHistory(
   content: ClipboardContent,
   apiClient: ISyncClipboardAPI,
   hasData: boolean,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onProgress?: DownloadProgressCallback
 ): Promise<ClipboardContent> {
   const needsDownload = hasData && content.fileName;
 
@@ -56,7 +47,7 @@ export async function downloadAndAddToHistory(
   if (!fileUri) {
     const fileName = content.fileName || 'data';
     const destUri = prepareTempFilePath(fileName);
-    fileUri = await apiClient.downloadFile(fileName, destUri, signal);
+    fileUri = await apiClient.downloadFile(fileName, destUri, signal, onProgress);
   }
 
   // 如果 profileHash 为空，下载完成后重新计算

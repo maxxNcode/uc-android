@@ -24,6 +24,7 @@ import { useSettingsStore } from '@/stores';
 import { useTransferQueueStore } from '@/stores/transferQueueStore';
 import { getHistoryTransferQueue } from '@/services/HistoryTransferQueue';
 import { getProfileId } from '@/services/HistoryAPI';
+import { formatSizeWithType, formatFileSize } from '@/utils';
 
 export interface HistoryListItemHandle {
   startDelete: () => void;
@@ -170,18 +171,6 @@ export const HistoryListItem = forwardRef<HistoryListItemHandle, HistoryListItem
         default:
           return '未知';
       }
-    };
-
-    const formatSize = (bytes?: number, type?: string): string => {
-      if (!bytes) return '';
-      // Text 类型显示字符数（添加千分位逗号）
-      if (type === 'Text') {
-        return bytes.toLocaleString('zh-CN');
-      }
-      // 其他类型显示文件大小
-      if (bytes < 1024) return `${bytes} B`;
-      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     };
 
     const formatTime = (timestamp: number): string => {
@@ -492,7 +481,7 @@ export const HistoryListItem = forwardRef<HistoryListItemHandle, HistoryListItem
                 <View style={styles.metaInfo}>
                   {item.size !== undefined && (
                     <Text style={[styles.metaText, { color: theme.colors.textTertiary }]}>
-                      {formatSize(item.size, item.type)}
+                      {formatSizeWithType(item.size, item.type)}
                     </Text>
                   )}
                   {/* 传输中状态 - 复用按钮显示取消 */}
@@ -507,7 +496,7 @@ export const HistoryListItem = forwardRef<HistoryListItemHandle, HistoryListItem
                         style={[styles.syncBadgeText, { color: theme.colors.error || '#F44336' }]}
                       >
                         {transferProgress > 0
-                          ? `${Math.round(transferProgress)}%${totalBytes ? ` (${formatSize(bytesTransferred)}/${formatSize(totalBytes)})` : ''}`
+                          ? `${Math.round(transferProgress)}%${totalBytes ? ` (${formatFileSize(bytesTransferred)}/${formatFileSize(totalBytes)})` : ''}`
                           : isUploadTask
                             ? '取消上传'
                             : '取消下载'}

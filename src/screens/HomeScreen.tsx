@@ -13,7 +13,6 @@ import {
   AppState,
   AppStateStatus,
   TouchableOpacity,
-  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
@@ -32,8 +31,9 @@ import { TopRightMenu, type MenuItemConfig } from '@/components/TopRightMenu';
 import { createAPIClient, getSignalRClient, historyStorage } from '@/services';
 import type { RemoteClipboardChangedCallback } from '@/services';
 import { copyToLocalClipboard } from '@/utils/clipboard';
-import { downloadAndAddToHistory } from '@/utils/remoteClipboard';
+import { downloadAndAddToHistory, type DownloadProgressCallback } from '@/utils/remoteClipboard';
 import { uploadFileAndAddToHistory } from '@/utils/uploadFile';
+import type { ProgressInfo } from 'native-util';
 import { useMessageStore } from '@/stores/messageStore';
 import { useErrorStore } from '@/stores/errorStore';
 import { QuickLoadingPage } from '@/components/QuickLoadingPage';
@@ -45,6 +45,11 @@ export function HomeScreen() {
   const [remoteContent, setRemoteContent] = useState<ClipboardContent | null>(null);
   const [loadingRemote, setLoadingRemote] = useState(false);
   const [downloadingRemote, setDownloadingRemote] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<{
+    progress: number;
+    bytesTransferred: number;
+    totalBytes: number;
+  } | null>(null);
   const [fileUploadPayload, setFileUploadPayload] = useState<{
     uri: string;
     fileName: string;
@@ -52,6 +57,7 @@ export function HomeScreen() {
     fileSize?: number;
   } | null>(null);
   const [fileUploadLoadingText, setFileUploadLoadingText] = useState('正在处理文件…');
+  const [fileUploadProgress, setFileUploadProgress] = useState<ProgressInfo | null>(null);
   const [uploadingClipboard, setUploadingClipboard] = useState(false);
   const { error, setError, clearError } = useErrorStore();
   const { message, showMessage, clearMessage } = useMessageStore();
@@ -506,7 +512,13 @@ export function HomeScreen() {
         fileUploadPayload.mimeType,
         fileUploadPayload.fileSize,
         activeServer,
-        { signal, onProgress: setFileUploadLoadingText }
+        {
+          signal,
+          onProgress: (stage, progress) => {
+            setFileUploadLoadingText(stage);
+            setFileUploadProgress(progress ?? null);
+          },
+        }
       );
     },
     [fileUploadPayload, activeServer]
@@ -515,6 +527,7 @@ export function HomeScreen() {
   const handleFileUploadComplete = useCallback(() => {
     setFileUploadPayload(null);
     setFileUploadLoadingText('正在处理文件…');
+    setFileUploadProgress(null);
   }, []);
 
   // 菜单项配置
@@ -523,13 +536,15 @@ export function HomeScreen() {
       {
         label: '上传图片',
         onPress: handleUploadImage,
+        disabled: !!fileUploadPayload,
       },
       {
         label: '上传文件',
         onPress: handleUploadFile,
+        disabled: !!fileUploadPayload,
       },
     ],
-    [handleUploadImage, handleUploadFile]
+    [handleUploadImage, handleUploadFile, fileUploadPayload]
   );
 
   // 设置标题栏菜单按钮
@@ -826,8 +841,17 @@ export function HomeScreen() {
     }
 
     setDownloadingRemote(true);
+    setDownloadProgress(null);
     const abortController = new AbortController();
     downloadAbortControllerRef.current = abortController;
+
+    const onProgress: DownloadProgressCallback = (info) => {
+      setDownloadProgress({
+        progress: info.progress,
+        bytesTransferred: info.bytesTransferred,
+        totalBytes: info.totalBytes,
+      });
+    };
 
     try {
       // 使用公共函数：下载并添加到历史记录
@@ -836,7 +860,8 @@ export function HomeScreen() {
         remoteContent,
         apiClient,
         remoteContent.hasData || false,
-        abortController.signal
+        abortController.signal,
+        onProgress
       );
       setRemoteContent(updatedContent);
       showMessage('文件已下载', 'success');
@@ -859,6 +884,7 @@ export function HomeScreen() {
     } finally {
       downloadAbortControllerRef.current = null;
       setDownloadingRemote(false);
+      setDownloadProgress(null);
     }
   };
 
@@ -907,6 +933,7 @@ export function HomeScreen() {
                   isRemote={true}
                   onDownload={handleDownloadRemoteFile}
                   downloading={downloadingRemote}
+                  downloadProgress={downloadProgress}
                   onCancelDownload={handleCancelDownload}
                   onCopy={async (content) => {
                     const result = await copyRemoteToLocal(content, 'Manual copy: ');
@@ -1007,6 +1034,11 @@ export function HomeScreen() {
             successText="上传成功"
             failureText="上传失败"
             onComplete={handleFileUploadComplete}
+            progress={fileUploadProgress}
+            previewText={fileUploadPayload.fileName}
+            previewImage={
+              fileUploadPayload.mimeType?.startsWith('image/') ? fileUploadPayload.uri : undefined
+            }
           />
         </View>
       )}
