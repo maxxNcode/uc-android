@@ -39,9 +39,9 @@ class DownloadTileService : TileService() {
             // so IMPORTANCE_FOREGROUND reliably indicates the app was the active app
             // when the user opened the shade.
             val url = if (isOwnAppInForeground())
-                "syncclipboard://quick-tile?fg=1"
+                "syncclipboard://quick-download?fg=1"
             else
-                "syncclipboard://quick-tile"
+                "syncclipboard://quick-download"
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)

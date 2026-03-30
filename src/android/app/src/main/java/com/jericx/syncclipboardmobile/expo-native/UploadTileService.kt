@@ -36,9 +36,9 @@ class UploadTileService : TileService() {
         Log.d(TAG, "Quick Settings Tile clicked")
         try {
             val url = if (isOwnAppInForeground())
-                "syncclipboard://quick-tile-upload?fg=1"
+                "syncclipboard://quick-upload?fg=1"
             else
-                "syncclipboard://quick-tile-upload"
+                "syncclipboard://quick-upload"
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)

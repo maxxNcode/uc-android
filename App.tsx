@@ -8,9 +8,10 @@ import { ShareReceiveScreen } from './src/screens/ShareReceiveScreen';
 import { SyncDirection } from './src/types/sync';
 import { useSettingsStore } from './src/stores';
 import { initLogger } from './src/services/Logger';
+import { setDynamicShortcuts } from 'shortcut';
 
-const QUICK_TILE_UPLOAD_URL = 'syncclipboard://quick-tile-upload';
-const QUICK_TILE_DOWNLOAD_URL = 'syncclipboard://quick-tile';
+const QUICK_UPLOAD_URL = 'syncclipboard://quick-upload';
+const QUICK_DOWNLOAD_URL = 'syncclipboard://quick-download';
 
 function parseQuickTileUrl(url: string | null): {
   isQuickTile: boolean;
@@ -20,9 +21,9 @@ function parseQuickTileUrl(url: string | null): {
   if (!url) return { isQuickTile: false, fromForeground: false, direction: SyncDirection.Download };
   const fromForeground = url.includes('fg=1');
   // Check upload first — its URL is a superset of the download prefix
-  if (url.startsWith(QUICK_TILE_UPLOAD_URL))
+  if (url.startsWith(QUICK_UPLOAD_URL))
     return { isQuickTile: true, fromForeground, direction: SyncDirection.Upload };
-  if (url.startsWith(QUICK_TILE_DOWNLOAD_URL))
+  if (url.startsWith(QUICK_DOWNLOAD_URL))
     return { isQuickTile: true, fromForeground, direction: SyncDirection.Download };
   return { isQuickTile: false, fromForeground: false, direction: SyncDirection.Download };
 }
@@ -46,6 +47,7 @@ export default function App() {
 
   useEffect(() => {
     initLogger();
+    setDynamicShortcuts();
   }, []);
 
   useEffect(() => {
