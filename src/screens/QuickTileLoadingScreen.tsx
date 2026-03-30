@@ -5,6 +5,7 @@ import { ClipboardContent } from '@/types/clipboard';
 import { SyncManager } from '@/services/SyncManager';
 import { useSyncStore } from '@/stores/syncStore';
 import { openFile, shareFile, saveFile, saveToGallery } from '@/utils/fileActions';
+import { isTextInvalid } from '@/utils/index';
 import { QuickLoadingPage, SuccessButtonConfig } from '@/components/QuickLoadingPage';
 import type { ProgressInfo } from 'native-util';
 
@@ -51,7 +52,7 @@ export const QuickTileLoadingScreen: React.FC<QuickTileLoadingScreenProps> = ({
       const content = result.content;
 
       // 只有文本类型才显示 Toast 提示
-      if (content && content.type === 'Text' && content.text) {
+      if (content && content.type === 'Text' && !isTextInvalid(content.text)) {
         const preview = content.text.trim().replace(/\s+/g, ' ');
         const toastMessage = preview.length > 40 ? preview.slice(0, 40) + '…' : preview;
         ToastAndroid.show(toastMessage, ToastAndroid.SHORT);

@@ -40,6 +40,7 @@ import { TopRightMenu, type MenuItemConfig } from '@/components/TopRightMenu';
 import { TransferQueueModal } from '@/components/TransferQueueModal';
 import { copyToLocalClipboard } from '@/utils/clipboard';
 import { openFile, saveFile, shareFile, saveToGallery } from '@/utils/fileActions';
+import { isTextInvalid } from '@/utils/index';
 import { useMessageStore } from '@/stores/messageStore';
 import { useErrorStore } from '@/stores/errorStore';
 import { calculateTextHash } from '@/utils/hash';
@@ -396,7 +397,7 @@ export function HistoryScreen() {
   const handleShare = useCallback(
     async (item: ClipboardItem) => {
       try {
-        if (item.type === 'Text' && item.text) {
+        if (item.type === 'Text' && !isTextInvalid(item.text)) {
           await Share.share({
             message: item.text,
             title: '分享文本',

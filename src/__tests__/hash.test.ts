@@ -12,9 +12,17 @@ describe('Hash Utils', () => {
   describe('calculateTextHash', () => {
     const { calculateTextHash } = require('../utils/hash');
 
-    it('should return empty string for empty input', async () => {
+    it('should calculate hash for empty string', async () => {
+      const mockHasher = {
+        update: jest.fn().mockReturnThis(),
+        hex: jest
+          .fn()
+          .mockReturnValue('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+      };
+      (sha256.create as unknown as jest.Mock).mockReturnValue(mockHasher);
+
       const result = await calculateTextHash('');
-      expect(result).toBe('');
+      expect(result).toBe('E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855');
     });
 
     it('should return empty string for null input', async () => {

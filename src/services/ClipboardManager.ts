@@ -8,6 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { ClipboardContent } from '@/types';
 import { calculateTextHash, calculateBase64Hash, calculateBase64ContentHash } from '@/utils/hash';
+import { isTextInvalid } from '@/utils/index';
 import { historyStorage } from './HistoryStorage';
 import { prepareTempFilePath } from '@/utils/fileStorage';
 
@@ -384,7 +385,7 @@ export class ClipboardManager {
   async setClipboardContent(content: ClipboardContent): Promise<void> {
     switch (content.type) {
       case 'Text':
-        if (content.text) {
+        if (!isTextInvalid(content.text)) {
           await this.setTextContent(content.text);
         }
         break;
@@ -399,7 +400,7 @@ export class ClipboardManager {
       case 'Group':
         // 文件和文件组暂不支持直接设置到剪贴板
         // 可以设置文件路径或名称作为文本
-        if (content.text) {
+        if (!isTextInvalid(content.text)) {
           await this.setTextContent(content.text);
         }
         break;

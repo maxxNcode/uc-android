@@ -4,6 +4,9 @@
 
 import { ClipboardContentType } from '../types/api';
 
+// Export text utilities
+export * from './textUtils';
+
 /**
  * Format timestamp to readable date string
  */

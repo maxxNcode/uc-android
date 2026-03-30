@@ -13,6 +13,7 @@ import { APIClient, APIClientConfig, PutContentOptions, ISyncClipboardAPI } from
 import { ProfileDto, ServerInfo } from '../types/api';
 import type { ClipboardContent } from '../types/clipboard';
 import { ValidationError, ServerError } from './errors';
+import { isTextInvalid } from '../utils/index';
 import {
   HistoryRecordDto,
   HistoryRecordUpdateDto,
@@ -439,7 +440,7 @@ export class SyncClipboardClient extends APIClient implements ISyncClipboardAPI,
       type: record.type,
     };
 
-    if (record.text) {
+    if (!isTextInvalid(record.text)) {
       formFields.text = record.text;
     }
     if (record.createTime) {

@@ -13,6 +13,7 @@ import { clipboardMonitor } from './ClipboardMonitor';
 import { ConfigurationError } from './errors';
 import { ServerConfig, ProfileDto } from '../types/api';
 import { compareHash } from '../utils/hash';
+import { isTextInvalid } from '../utils/index';
 import type { ProgressInfo } from 'native-util';
 import {
   SyncConfig,
@@ -296,7 +297,7 @@ export class SyncManager {
 
       // 调用预览回调
       if (onPreview) {
-        if (localContent.type === 'Text' && localContent.text) {
+        if (localContent.type === 'Text' && !isTextInvalid(localContent.text)) {
           const preview = localContent.text.trim().replace(/\s+/g, ' ');
           onPreview(preview.length > 40 ? preview.slice(0, 40) + '…' : preview);
         } else if (localContent.type !== 'Text' && localContent.fileName) {
@@ -442,7 +443,7 @@ export class SyncManager {
 
       // 调用预览回调
       if (onPreview) {
-        if (profile.type === 'Text' && profile.hasData && profile.text) {
+        if (profile.type === 'Text' && profile.hasData && !isTextInvalid(profile.text)) {
           const preview = profile.text.trim().replace(/\s+/g, ' ');
           onPreview(preview.length > 40 ? preview.slice(0, 40) + '…' : preview);
         } else if (profile.hasData && profile.dataName) {

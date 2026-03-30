@@ -17,7 +17,7 @@ import {
 import { useTheme } from '@/hooks/useTheme';
 import type { ClipboardContent } from '@/types/clipboard';
 import type { ProgressInfo } from 'native-util';
-import { formatFileSize } from '@/utils';
+import { formatFileSize, isTextInvalid } from '@/utils';
 
 type LoadingState = 'loading' | 'success' | 'error';
 
@@ -275,7 +275,7 @@ const ContentPreview: React.FC<{ content: ClipboardContent }> = ({ content }) =>
     );
   }
 
-  if (content.type === 'Text' && content.text) {
+  if (content.type === 'Text' && !isTextInvalid(content.text)) {
     return (
       <View
         style={[

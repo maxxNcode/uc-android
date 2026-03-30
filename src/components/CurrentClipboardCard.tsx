@@ -10,7 +10,7 @@ import { ClipboardContent } from '@/types/clipboard';
 import { useSettingsStore } from '@/stores';
 import { useMessageStore } from '@/stores/messageStore';
 import { openFile, shareFile, saveFile, saveToGallery } from '@/utils/fileActions';
-import { formatFileSize, formatSizeWithType } from '@/utils';
+import { formatFileSize, formatSizeWithType, isTextInvalid } from '@/utils';
 
 interface DownloadProgress {
   progress: number;
@@ -75,7 +75,7 @@ export const CurrentClipboardCard: React.FC<CurrentClipboardCardProps> = ({
   const handleShare = async () => {
     if (!clipboard) return;
     try {
-      if (clipboard.type === 'Text' && clipboard.text) {
+      if (clipboard.type === 'Text' && !isTextInvalid(clipboard.text)) {
         await Share.share({ message: clipboard.text });
       } else if (clipboard.fileUri) {
         await shareFile(clipboard.fileUri, clipboard.fileName);

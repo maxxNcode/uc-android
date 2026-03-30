@@ -8,6 +8,8 @@ import { sha256 } from 'js-sha256';
 import type { ClipboardContent } from '@/types';
 import { isNativeHashModuleAvailable, nativeCalculateFileHash } from 'native-util';
 
+import { isTextInvalid } from './textUtils';
+
 function createAbortError(): Error {
   const error = new Error('Operation was aborted');
   error.name = 'AbortError';
@@ -27,7 +29,7 @@ function throwIfAborted(signal?: AbortSignal): void {
  * @returns SHA256 hash 字符串（大写十六进制）
  */
 export async function calculateTextHash(text: string, signal?: AbortSignal): Promise<string> {
-  if (!text) {
+  if (isTextInvalid(text)) {
     return '';
   }
 
@@ -266,7 +268,7 @@ export async function calculateContentHash(
 
   switch (type) {
     case 'Text':
-      return text ? await calculateTextHash(text, signal) : undefined;
+      return !isTextInvalid(text) ? await calculateTextHash(text, signal) : undefined;
 
     case 'Image':
     case 'File':

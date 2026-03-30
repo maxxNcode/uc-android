@@ -6,6 +6,7 @@
 import { ProfileDto, ClipboardContent, ClipboardContentType } from '@/types';
 import { calculateContentHash } from '@/utils/hash';
 import { useClipboardStore } from '@/stores/clipboardStore';
+import { isTextInvalid } from './textUtils';
 
 export interface ContentToProfileDtoOptions {
   signal?: AbortSignal;
@@ -269,7 +270,7 @@ export async function copyClipboardItem(
   }
 ): Promise<CopyResult> {
   try {
-    if (item.type === 'Text' && item.text) {
+    if (item.type === 'Text' && !isTextInvalid(item.text)) {
       await clipboardManager.setClipboardContent({
         type: 'Text',
         text: item.text,
@@ -335,7 +336,7 @@ export async function copyToLocalClipboard(content: ClipboardContent): Promise<C
       } catch (error) {
         console.error('[copyToLocalClipboard] Failed to read text file:', error);
         // 失败时如果有预览文本就使用预览文本，否则返回失败
-        if (!content.text) {
+        if (isTextInvalid(content.text)) {
           return { success: false, message: '无法读取完整文本' };
         }
         // 使用预览文本继续执行
