@@ -48,6 +48,8 @@ export interface NativeUtilModuleType {
     fileUri: string | null
   ): string;
   startZipFiles(fileUris: string[], destUri: string): string;
+  showDebugNotification(title: string, text: string): void;
+  dismissDebugNotification(): void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   addListener(eventName: string, listener: (event: any) => void): EventSubscription;
 }
@@ -277,5 +279,17 @@ export async function nativeDownloadFile(
   } finally {
     signal?.removeEventListener('abort', abortHandler);
     progressSub?.remove();
+  }
+}
+
+export function showDebugNotification(title: string, text: string): void {
+  if (Platform.OS === 'android') {
+    NativeUtilModule.showDebugNotification(title, text);
+  }
+}
+
+export function dismissDebugNotification(): void {
+  if (Platform.OS === 'android') {
+    NativeUtilModule.dismissDebugNotification();
   }
 }

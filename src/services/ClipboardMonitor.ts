@@ -7,6 +7,7 @@ import { AppState, AppStateStatus, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ClipboardManager } from './ClipboardManager';
 import { ClipboardContent, ClipboardChangeCallback, ClipboardMonitorOptions } from '@/types';
+import { setTimer, clearTimer } from 'native-timer';
 
 const LAST_CLIPBOARD_HASH_KEY = '@last_clipboard_hash';
 
@@ -23,7 +24,7 @@ export class ClipboardMonitor {
   private clipboardManager: ClipboardManager;
   private callbacks: Set<ClipboardChangeCallback> = new Set();
   private isMonitoring: boolean = false;
-  private pollingInterval: NodeJS.Timeout | null = null;
+  private pollingTimerTag: string | null = null;
   private appStateSubscription: ReturnType<typeof AppState.addEventListener> | null = null;
   private lastContent: ClipboardContent | null = null;
 
@@ -173,16 +174,20 @@ export class ClipboardMonitor {
   private startPolling(): void {
     this.stopPolling(); // 先停止现有轮询
 
-    this.pollingInterval = setInterval(() => this.checkClipboard(), this.options.pollingInterval);
+    this.pollingTimerTag = setTimer(
+      () => this.checkClipboard(),
+      this.options.pollingInterval,
+      'clipboard_monitor'
+    );
   }
 
   /**
    * 停止轮询
    */
   private stopPolling(): void {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
-      this.pollingInterval = null;
+    if (this.pollingTimerTag) {
+      clearTimer(this.pollingTimerTag);
+      this.pollingTimerTag = null;
     }
   }
 
@@ -270,12 +275,17 @@ export class ClipboardMonitor {
 
     if (nextAppState === 'active') {
       // 应用进入前台，开始监听
-      if (this.isMonitoring && !this.pollingInterval) {
+      if (this.isMonitoring && !this.pollingTimerTag) {
         this.startPolling();
       }
     } else if (nextAppState === 'background' || nextAppState === 'inactive') {
-      // 应用进入后台，停止监听
-      this.stopPolling();
+      // 后台同步启用时不停止轮询
+      const { useSettingsStore } = require('@/stores/settingsStore');
+      const bgSyncEnabled = useSettingsStore.getState().config?.enableBackgroundSync;
+      if (!bgSyncEnabled) {
+        // 应用进入后台，停止监听
+        this.stopPolling();
+      }
     }
   };
 
@@ -333,7 +343,7 @@ export class ClipboardMonitor {
    */
   updatePollingInterval(interval: number): void {
     this.options.pollingInterval = interval;
-    if (this.isMonitoring && this.pollingInterval) {
+    if (this.isMonitoring && this.pollingTimerTag) {
       this.startPolling();
     }
   }

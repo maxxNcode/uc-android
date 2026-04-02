@@ -88,6 +88,9 @@ export interface AppConfig {
 
   /** 本地轮询间隔（毫秒），默认 1000ms */
   localPollingInterval: number;
+
+  /** 是否启用后台同步（Android 前台服务） */
+  enableBackgroundSync: boolean;
 }
 
 /**
@@ -257,6 +260,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   logLevel: 'info', // 默认 info 级别
   remotePollingInterval: 3000, // 默认 3 秒
   localPollingInterval: 1000, // 默认 1 秒
+  enableBackgroundSync: false, // 默认关闭后台同步
 };
 
 /**

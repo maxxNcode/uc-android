@@ -16,7 +16,10 @@
       "@hooks/*": ["src/hooks/*"],
       "@assets/*": ["src/assets/*"],
       "native-util": ["modules/native-util/src"],
-      "shortcut": ["modules/shortcut/src"]
+      "shortcut": ["modules/shortcut/src"],
+      "background-sync": ["modules/background-sync/src"],
+      "signalr-client": ["modules/signalr-client/src"],
+      "native-timer": ["modules/native-timer/src"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],

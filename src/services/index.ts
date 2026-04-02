@@ -18,9 +18,13 @@ export { WebDAVClient, type WebDAVConfig } from './WebDAVClient';
 export { ClipboardManager, clipboardManager } from './ClipboardManager';
 export { ClipboardMonitor, clipboardMonitor } from './ClipboardMonitor';
 
-// SignalR Client
-export { SignalRClient, getSignalRClient, resetSignalRClient } from './SignalRClient';
-export type { RemoteClipboardChangedCallback, RemoteHistoryChangedCallback } from './SignalRClient';
+// SignalR Client (re-exported from signalr-client module)
+export { getSignalRClient, resetSignalRClient } from 'signalr-client';
+export type {
+  SignalRClient,
+  RemoteClipboardChangedCallback,
+  RemoteHistoryChangedCallback,
+} from 'signalr-client';
 
 // Sync Manager
 export { SyncManager } from './SyncManager';

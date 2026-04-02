@@ -57,6 +57,7 @@ export const SettingsScreen = () => {
     setLogLevel,
     setRemotePollingInterval,
     setLocalPollingInterval,
+    setEnableBackgroundSync,
   } = useSettingsStore();
 
   const [showServerModal, setShowServerModal] = useState(false);
@@ -76,6 +77,11 @@ export const SettingsScreen = () => {
   const [localHistorySyncEnabled, setLocalHistorySyncEnabled] = useState(
     config?.enableHistorySync ?? false
   );
+  const [localBackgroundSyncEnabled, setLocalBackgroundSyncEnabled] = useState(
+    config?.enableBackgroundSync ?? false
+  );
+  const [localDebugBgTestEnabled, setLocalDebugBgTestEnabled] = useState(false);
+  const [lastBgTestDuration, setLastBgTestDuration] = useState<string>('无记录');
   const [showLogLevelMenu, setShowLogLevelMenu] = useState(false);
 
   // 更新检查状态
@@ -114,6 +120,20 @@ export const SettingsScreen = () => {
   useEffect(() => {
     setLocalHistorySyncEnabled(config?.enableHistorySync ?? true);
   }, [config?.enableHistorySync]);
+
+  useEffect(() => {
+    setLocalBackgroundSyncEnabled(config?.enableBackgroundSync ?? false);
+  }, [config?.enableBackgroundSync]);
+
+  // 加载上次后台测试持续时长
+  useEffect(() => {
+    const loadDuration = async () => {
+      const { BackgroundTestService } = await import('@/services/BackgroundTestService');
+      const ms = await BackgroundTestService.getLastDuration();
+      setLastBgTestDuration(BackgroundTestService.formatDuration(ms));
+    };
+    loadDuration();
+  }, []);
 
   // 计算存储大小
   useEffect(() => {
@@ -261,6 +281,19 @@ export const SettingsScreen = () => {
     }
   };
 
+  // 处理切换后台同步
+  const handleToggleBackgroundSync = async (enabled: boolean) => {
+    setLocalBackgroundSyncEnabled(enabled);
+
+    try {
+      await setEnableBackgroundSync(enabled);
+      showMessage(enabled ? '已启用后台同步' : '已禁用后台同步', 'success');
+    } catch (error: unknown) {
+      setLocalBackgroundSyncEnabled(!enabled);
+      showMessage(error instanceof Error ? error.message : '设置失败', 'error');
+    }
+  };
+
   // 处理最大文件大小输入
   const handleMaxSizeBlur = async () => {
     try {
@@ -356,6 +389,29 @@ export const SettingsScreen = () => {
       // 如果设置失败，恢复原来的状态
       setLocalDebugModeEnabled(!enabled);
       showMessage(error instanceof Error ? error.message : '设置失败', 'error');
+    }
+  };
+
+  // 处理切换后台服务稳定性测试
+  const handleToggleDebugBgTest = async (enabled: boolean) => {
+    setLocalDebugBgTestEnabled(enabled);
+    try {
+      const { getBackgroundTestService, BackgroundTestService } =
+        await import('@/services/BackgroundTestService');
+      const service = getBackgroundTestService();
+      if (enabled) {
+        await service.start();
+        setLastBgTestDuration(BackgroundTestService.formatDuration(0));
+        showMessage('已启用后台服务测试', 'success');
+      } else {
+        await service.stop();
+        const ms = await BackgroundTestService.getLastDuration();
+        setLastBgTestDuration(BackgroundTestService.formatDuration(ms));
+        showMessage('已停止后台服务测试', 'success');
+      }
+    } catch (error: unknown) {
+      setLocalDebugBgTestEnabled(!enabled);
+      showMessage(error instanceof Error ? error.message : '操作失败', 'error');
     }
   };
 
@@ -673,6 +729,23 @@ export const SettingsScreen = () => {
                 onValueChange={handleToggleAutoSync}
                 trackColor={{ false: theme.colors.divider, true: theme.colors.primary }}
                 thumbColor={localAutoSyncEnabled ? theme.colors.surface : theme.colors.textTertiary}
+              />
+            </View>
+
+            <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
+              <View style={styles.settingInfo}>
+                <Text style={[styles.settingLabel, { color: theme.colors.text }]}>后台同步</Text>
+                <Text style={[styles.settingDescription, { color: theme.colors.textTertiary }]}>
+                  切换到后台时持续监听剪贴板（仅 Android）
+                </Text>
+              </View>
+              <Switch
+                value={localBackgroundSyncEnabled}
+                onValueChange={handleToggleBackgroundSync}
+                trackColor={{ false: theme.colors.divider, true: theme.colors.primary }}
+                thumbColor={
+                  localBackgroundSyncEnabled ? theme.colors.surface : theme.colors.textTertiary
+                }
               />
             </View>
 
@@ -1154,8 +1227,27 @@ export const SettingsScreen = () => {
                 }
               />
             </View>
+          </View>
+        </View>
 
-            <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
+        {/* 调试部分 */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderBase}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>调试</Text>
+          </View>
+
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+            ]}
+          >
+            <View
+              style={[
+                localDebugModeEnabled ? styles.settingRow : styles.settingRowNoBorder,
+                { borderBottomColor: theme.colors.divider },
+              ]}
+            >
               <View style={styles.settingInfo}>
                 <Text style={[styles.settingLabel, { color: theme.colors.text }]}>调试模式</Text>
               </View>
@@ -1168,6 +1260,27 @@ export const SettingsScreen = () => {
                 }
               />
             </View>
+
+            {localDebugModeEnabled && (
+              <View style={styles.settingRow}>
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingLabel, { color: theme.colors.text }]}>
+                    测试后台服务稳定性
+                  </Text>
+                  <Text style={[styles.settingDescription, { color: theme.colors.textTertiary }]}>
+                    上次持续时长：{lastBgTestDuration}
+                  </Text>
+                </View>
+                <Switch
+                  value={localDebugBgTestEnabled}
+                  onValueChange={handleToggleDebugBgTest}
+                  trackColor={{ false: theme.colors.divider, true: theme.colors.primary }}
+                  thumbColor={
+                    localDebugBgTestEnabled ? theme.colors.surface : theme.colors.textTertiary
+                  }
+                />
+              </View>
+            )}
           </View>
         </View>
 
@@ -1301,6 +1414,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  settingRowNoBorder: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   settingInfo: {
     flex: 1,

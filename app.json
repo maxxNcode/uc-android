@@ -33,6 +33,7 @@
       "./plugins/build/withQuickSettingsTileManifest.js",
       "./plugins/build/withAndroidNativeCode.js",
       "./plugins/build/withAbiSplits.js",
+      // "./plugins/build/withBackgroundSyncService.js",
       [
         "expo-sharing",
         {

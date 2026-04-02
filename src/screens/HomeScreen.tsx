@@ -28,9 +28,10 @@ import { ClipboardContent, createDefaultClipboardItem, HistorySyncStatus } from 
 import { CurrentClipboardCard } from '@/components/CurrentClipboardCard';
 import { MessageToast } from '@/components/MessageToast';
 import { TopRightMenu, type MenuItemConfig } from '@/components/TopRightMenu';
-import { createAPIClient, getSignalRClient, historyStorage } from '@/services';
-import type { RemoteClipboardChangedCallback } from '@/services';
+import { createAPIClient, historyStorage } from '@/services';
 import { copyToLocalClipboard } from '@/utils/clipboard';
+import { getSignalRClient, type ProfileChangedEvent } from 'signalr-client';
+import { setTimer, clearTimer } from 'native-timer';
 import { downloadAndAddToHistory, type DownloadProgressCallback } from '@/utils/remoteClipboard';
 import { uploadFileAndAddToHistory } from '@/utils/uploadFile';
 import type { ProgressInfo } from 'native-util';
@@ -65,13 +66,11 @@ export function HomeScreen() {
   const { error, setError, clearError } = useErrorStore();
   const { message, showMessage, clearMessage } = useMessageStore();
   const appState = useRef(AppState.currentState);
-  const remotePollingInterval = useRef<NodeJS.Timeout | null>(null);
+  const remotePollingTag = useRef<string | null>(null);
   const lastRemoteProfileHash = useRef<string | null>(null);
   const lastLocalProfileHash = useRef<string | null>(null);
   const isAutoSyncing = useRef(false);
-  const signalRClient = useRef(getSignalRClient());
   const signalRConnected = useRef(false);
-  const signalRCallbackRef = useRef<RemoteClipboardChangedCallback | null>(null);
   const downloadAbortControllerRef = useRef<AbortController | null>(null);
   const clipboardUploadAbortControllerRef = useRef<AbortController | null>(null);
 
@@ -426,8 +425,8 @@ export function HomeScreen() {
 
   // 启动远程剪贴板轮询
   const startRemotePolling = () => {
-    if (!activeServer || remotePollingInterval.current) {
-      if (remotePollingInterval.current) {
+    if (!activeServer || remotePollingTag.current) {
+      if (remotePollingTag.current) {
         console.log('[HomeScreen] Polling already active, skipping');
       }
       return;
@@ -443,21 +442,25 @@ export function HomeScreen() {
 
     // 设置定时轮询
     const pollingInterval = config?.remotePollingInterval ?? 3000;
-    remotePollingInterval.current = setInterval(() => {
-      fetchRemoteClipboard(true);
-    }, pollingInterval);
+    remotePollingTag.current = setTimer(
+      () => {
+        fetchRemoteClipboard(true);
+      },
+      pollingInterval,
+      'home_remote_poll'
+    );
   };
 
   // 停止远程剪贴板轮询
   const stopRemotePolling = () => {
-    if (remotePollingInterval.current) {
+    if (remotePollingTag.current) {
       console.log('[HomeScreen] Stopping remote clipboard polling');
-      clearInterval(remotePollingInterval.current);
-      remotePollingInterval.current = null;
+      clearTimer(remotePollingTag.current);
+      remotePollingTag.current = null;
     }
   };
 
-  // 连接 SignalR
+  // 连接 SignalR（统一客户端，Android 使用 native Java 实现，其他平台使用 JS 实现）
   const connectSignalR = async () => {
     if (!activeServer || activeServer.type !== 'syncclipboard') {
       console.log('[HomeScreen] Cannot connect SignalR - server type:', activeServer?.type);
@@ -465,37 +468,43 @@ export function HomeScreen() {
     }
 
     try {
-      console.log('[HomeScreen] Connecting to SignalR for server:', activeServer.url);
+      console.log('[HomeScreen] Connecting SignalR for server:', activeServer.url);
 
-      // 注册远程剪贴板变化回调
-      const callback: RemoteClipboardChangedCallback = async (profile) => {
+      const client = getSignalRClient();
+
+      // 注册远程剪贴板变化事件监听
+      const handleProfileChanged = async (event: ProfileChangedEvent) => {
         console.log('[HomeScreen] SignalR: Remote clipboard changed');
 
-        // 转换为 ClipboardContent
         const { profileDtoToContent } = await import('@/utils/clipboard');
+        const profile = {
+          type: event.type as 'Text' | 'Image' | 'File' | 'Group',
+          hash: event.hash,
+          text: event.text,
+          hasData: event.hasData,
+          dataName: event.dataName,
+          size: event.size,
+        };
         const content = profileDtoToContent(profile);
         const currentHash = content.profileHash || content.text || '';
 
-        // 使用公共处理函数
         const apiClient = createAPIClient(activeServer);
         await processRemoteClipboardContent(
           content,
           currentHash,
           profile.hasData,
           apiClient,
-          'SignalR: ' // 日志前缀
+          'SignalR: '
         );
       };
 
-      // 保存回调引用，用于断开时移除
-      signalRCallbackRef.current = callback;
-      signalRClient.current.onRemoteClipboardChanged(callback);
+      client.onRemoteClipboardChanged(handleProfileChanged);
 
-      // 开始连接
-      await signalRClient.current.connect(activeServer);
+      // 连接
+      await client.connect(activeServer);
       signalRConnected.current = true;
 
-      // 连接成功后立即获取一次远程剪贴板
+      // 连接后立即获取一次远程剪贴板
       await fetchRemoteClipboard(true);
     } catch (error) {
       console.error('[HomeScreen] Failed to connect SignalR:', error);
@@ -507,11 +516,9 @@ export function HomeScreen() {
   const disconnectSignalR = async () => {
     if (signalRConnected.current) {
       console.log('[HomeScreen] Disconnecting SignalR...');
-      if (signalRCallbackRef.current) {
-        signalRClient.current.offRemoteClipboardChanged(signalRCallbackRef.current);
-        signalRCallbackRef.current = null;
-      }
-      await signalRClient.current.disconnect();
+      const client = getSignalRClient();
+      client.clearCallbacks();
+      await client.disconnect();
       signalRConnected.current = false;
     }
   };
@@ -794,7 +801,7 @@ export function HomeScreen() {
           if (activeServer) {
             if (activeServer.type === 'syncclipboard') {
               // SignalR 会自动重连，但我们手动刷新一次
-              if (signalRClient.current.isConnected()) {
+              if (getSignalRClient().isConnected()) {
                 await fetchRemoteClipboard(true);
               } else {
                 await connectSignalR();
@@ -807,8 +814,15 @@ export function HomeScreen() {
         } else if (nextAppState === 'background' || nextAppState === 'inactive') {
           console.log('[HomeScreen] App has gone to the background');
 
-          // 应用进入后台，停止轮询（SignalR 保持连接）
-          stopRemotePolling();
+          // 后台同步启用时不停止轮询，让轮询在后台继续运行
+          const bgSyncEnabled = useSettingsStore.getState().config?.enableBackgroundSync;
+          if (!bgSyncEnabled) {
+            // 应用进入后台，停止轮询和 SignalR
+            stopRemotePolling();
+            await disconnectSignalR();
+          } else {
+            console.log('[HomeScreen] Background sync enabled, keeping remote polling active');
+          }
         }
 
         appState.current = nextAppState;

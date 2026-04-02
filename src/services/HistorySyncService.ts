@@ -15,7 +15,7 @@ import {
 import { HistoryStorage } from './HistoryStorage';
 import { ClipboardItem, HistorySyncStatus } from '@/types/clipboard';
 import { ServerConfig } from '@/types/api';
-import { getSignalRClient, SignalRClient } from './SignalRClient';
+import { getSignalRClient, type HistoryChangedEvent } from 'signalr-client';
 
 const MAX_TIME_DIFFERENCE_MS = 5 * 60 * 1000; // 5 分钟
 
@@ -38,7 +38,6 @@ export interface HistorySyncConfig {
 
 export class HistorySyncService {
   private historyStorage: HistoryStorage;
-  private signalRClient: SignalRClient;
   private historyAPI: IHistoryAPI | null = null;
   private serverConfig: ServerConfig | null = null;
   private lastSyncTime: number | null = null;
@@ -52,7 +51,6 @@ export class HistorySyncService {
 
   constructor() {
     this.historyStorage = HistoryStorage.getInstance();
-    this.signalRClient = getSignalRClient();
   }
 
   /**
@@ -71,8 +69,9 @@ export class HistorySyncService {
     this.historyAPI = config.historyAPI;
     this.serverConfig = config.serverConfig;
 
-    // 注册 SignalR 历史变化回调
-    this.signalRClient.onRemoteHistoryChanged(this.handleRemoteHistoryChanged);
+    // 注册 SignalR 历史变化事件监听
+    const client = getSignalRClient();
+    client.onRemoteHistoryChanged(this.handleNativeHistoryChanged);
 
     // 注册本地存储变更回调，自动同步 NeedSync 记录
     this.storageChangeCallback = this.handleLocalHistoryChanged;
@@ -99,7 +98,9 @@ export class HistorySyncService {
    * 销毁同步服务
    */
   async destroy(): Promise<void> {
-    this.signalRClient.offRemoteHistoryChanged(this.handleRemoteHistoryChanged);
+    // 移除 SignalR 历史变化回调
+    const client = getSignalRClient();
+    client.offRemoteHistoryChanged(this.handleNativeHistoryChanged);
 
     // 移除本地存储变更回调
     if (this.storageChangeCallback) {
@@ -839,6 +840,27 @@ export class HistorySyncService {
   /**
    * 处理远程历史变化
    */
+  /**
+   * 处理 native SignalR 历史变化事件，转换为 HistoryRecordDto 并处理
+   */
+  private handleNativeHistoryChanged = async (event: HistoryChangedEvent): Promise<void> => {
+    const record: HistoryRecordDto = {
+      hash: event.hash,
+      text: event.text,
+      type: event.type as 'Text' | 'Image' | 'File',
+      hasData: event.hasData,
+      size: event.size,
+      starred: event.starred,
+      pinned: event.pinned,
+      version: event.version,
+      isDeleted: event.isDeleted,
+      createTime: event.createTime,
+      lastModified: event.lastModified,
+      lastAccessed: event.lastAccessed,
+    };
+    await this.handleRemoteHistoryChanged(record);
+  };
+
   private handleRemoteHistoryChanged = async (record: HistoryRecordDto): Promise<void> => {
     console.log('[HistorySyncService] Remote history changed:', record.hash);
 
