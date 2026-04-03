@@ -294,7 +294,9 @@ export class ClipboardMonitor {
     } else if (nextAppState === 'background' || nextAppState === 'inactive') {
       // 后台同步启用时不停止轮询
       const { useSettingsStore } = require('@/stores/settingsStore');
-      const bgSyncEnabled = useSettingsStore.getState().config?.enableBackgroundSync;
+      const bgSyncEnabled =
+        useSettingsStore.getState().config?.enableBackgroundTasks &&
+        useSettingsStore.getState().config?.enableBackgroundSync;
       if (!bgSyncEnabled) {
         // 应用进入后台，停止监听
         this.stopPolling();

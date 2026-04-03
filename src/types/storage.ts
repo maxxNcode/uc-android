@@ -89,6 +89,9 @@ export interface AppConfig {
   /** 本地轮询间隔（毫秒），默认 1000ms */
   localPollingInterval: number;
 
+  /** 后台任务总开关 */
+  enableBackgroundTasks: boolean;
+
   /** 是否启用后台同步（Android 前台服务） */
   enableBackgroundSync: boolean;
 
@@ -269,6 +272,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   logLevel: 'info', // 默认 info 级别
   remotePollingInterval: 3000, // 默认 3 秒
   localPollingInterval: 1000, // 默认 1 秒
+  enableBackgroundTasks: false, // 默认关闭后台任务总开关
   enableBackgroundSync: false, // 默认关闭后台同步
   enableClipboardOverlay: false, // 默认关闭悬浮窗获取剪贴板
   debugOverlayVisible: false, // 默认不显示悬浮窗

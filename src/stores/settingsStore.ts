@@ -115,6 +115,9 @@ interface SettingsState {
   /** 设置本地轮询间隔（毫秒） */
   setLocalPollingInterval: (interval: number) => Promise<void>;
 
+  /** 设置后台任务总开关 */
+  setEnableBackgroundTasks: (enabled: boolean) => Promise<void>;
+
   /** 设置后台同步 */
   setEnableBackgroundSync: (enabled: boolean) => Promise<void>;
 
@@ -331,6 +334,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   setLocalPollingInterval: async (interval: number) => {
     await get().updateConfig({ localPollingInterval: interval });
+  },
+
+  setEnableBackgroundTasks: async (enabled: boolean) => {
+    await get().updateConfig({ enableBackgroundTasks: enabled });
   },
 
   setEnableBackgroundSync: async (enabled: boolean) => {

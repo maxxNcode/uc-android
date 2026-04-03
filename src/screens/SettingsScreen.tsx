@@ -61,6 +61,7 @@ export const SettingsScreen = () => {
     setLocalPollingInterval,
     setEnableBackgroundSync,
     setEnableClipboardOverlay,
+    setEnableBackgroundTasks,
   } = useSettingsStore();
 
   const [showServerModal, setShowServerModal] = useState(false);
@@ -82,6 +83,9 @@ export const SettingsScreen = () => {
   );
   const [localBackgroundSyncEnabled, setLocalBackgroundSyncEnabled] = useState(
     config?.enableBackgroundSync ?? false
+  );
+  const [localBackgroundTasksEnabled, setLocalBackgroundTasksEnabled] = useState(
+    config?.enableBackgroundTasks ?? false
   );
   const [localClipboardOverlayEnabled, setLocalClipboardOverlayEnabled] = useState(
     config?.enableClipboardOverlay ?? false
@@ -134,6 +138,10 @@ export const SettingsScreen = () => {
   useEffect(() => {
     setLocalBackgroundSyncEnabled(config?.enableBackgroundSync ?? false);
   }, [config?.enableBackgroundSync]);
+
+  useEffect(() => {
+    setLocalBackgroundTasksEnabled(config?.enableBackgroundTasks ?? false);
+  }, [config?.enableBackgroundTasks]);
 
   useEffect(() => {
     setLocalClipboardOverlayEnabled(config?.enableClipboardOverlay ?? false);
@@ -291,6 +299,18 @@ export const SettingsScreen = () => {
     } catch (error: unknown) {
       // 如果设置失败，恢复原来的状态
       setLocalAutoSyncEnabled(!enabled);
+      showMessage(error instanceof Error ? error.message : '设置失败', 'error');
+    }
+  };
+
+  // 处理切换后台任务总开关
+  const handleToggleBackgroundTasks = async (enabled: boolean) => {
+    setLocalBackgroundTasksEnabled(enabled);
+    try {
+      await setEnableBackgroundTasks(enabled);
+      showMessage(enabled ? '已启用后台任务' : '已禁用后台任务', 'success');
+    } catch (error: unknown) {
+      setLocalBackgroundTasksEnabled(!enabled);
       showMessage(error instanceof Error ? error.message : '设置失败', 'error');
     }
   };
@@ -852,41 +872,6 @@ export const SettingsScreen = () => {
 
             <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
               <View style={styles.settingInfo}>
-                <Text style={[styles.settingLabel, { color: theme.colors.text }]}>后台同步</Text>
-                <Text style={[styles.settingDescription, { color: theme.colors.textTertiary }]}>
-                  仅在启用自动复制时生效
-                </Text>
-              </View>
-              <Switch
-                value={localBackgroundSyncEnabled}
-                onValueChange={handleToggleBackgroundSync}
-                trackColor={{ false: theme.colors.divider, true: theme.colors.primary }}
-                thumbColor={
-                  localBackgroundSyncEnabled ? theme.colors.surface : theme.colors.textTertiary
-                }
-              />
-            </View>
-
-            {Platform.OS === 'android' && (
-              <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
-                <View style={styles.settingInfo}>
-                  <Text style={[styles.settingLabel, { color: theme.colors.text }]}>
-                    在后台时通过悬浮窗获取本地剪贴板
-                  </Text>
-                </View>
-                <Switch
-                  value={localClipboardOverlayEnabled}
-                  onValueChange={handleToggleClipboardOverlay}
-                  trackColor={{ false: theme.colors.divider, true: theme.colors.primary }}
-                  thumbColor={
-                    localClipboardOverlayEnabled ? theme.colors.surface : theme.colors.textTertiary
-                  }
-                />
-              </View>
-            )}
-
-            <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
-              <View style={styles.settingInfo}>
                 <Text style={[styles.settingLabel, { color: theme.colors.text }]}>
                   允许自动同步的数据大小
                 </Text>
@@ -996,6 +981,98 @@ export const SettingsScreen = () => {
             </View>
           </View>
         </View>
+
+        {/* 后台任务部分 */}
+        {Platform.OS === 'android' && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderBase}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>后台任务</Text>
+            </View>
+
+            <View
+              style={[
+                styles.card,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+              ]}
+            >
+              <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingLabel, { color: theme.colors.text }]}>后台任务</Text>
+                  <Text style={[styles.settingDescription, { color: theme.colors.textTertiary }]}>
+                    关闭后将停止所有后台任务
+                  </Text>
+                </View>
+                <Switch
+                  value={localBackgroundTasksEnabled}
+                  onValueChange={handleToggleBackgroundTasks}
+                  trackColor={{ false: theme.colors.divider, true: theme.colors.primary }}
+                  thumbColor={
+                    localBackgroundTasksEnabled ? theme.colors.surface : theme.colors.textTertiary
+                  }
+                />
+              </View>
+
+              <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
+                <View style={styles.settingInfo}>
+                  <Text
+                    style={[
+                      styles.settingLabel,
+                      {
+                        color: localBackgroundTasksEnabled
+                          ? theme.colors.text
+                          : theme.colors.textTertiary,
+                      },
+                    ]}
+                  >
+                    后台同步
+                  </Text>
+                  <Text style={[styles.settingDescription, { color: theme.colors.textTertiary }]}>
+                    仅在启用自动复制时生效
+                  </Text>
+                </View>
+                <Switch
+                  value={localBackgroundTasksEnabled && localBackgroundSyncEnabled}
+                  onValueChange={handleToggleBackgroundSync}
+                  trackColor={{ false: theme.colors.divider, true: theme.colors.primary }}
+                  thumbColor={
+                    localBackgroundTasksEnabled && localBackgroundSyncEnabled
+                      ? theme.colors.surface
+                      : theme.colors.textTertiary
+                  }
+                  disabled={!localBackgroundTasksEnabled}
+                />
+              </View>
+
+              <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
+                <View style={styles.settingInfo}>
+                  <Text
+                    style={[
+                      styles.settingLabel,
+                      {
+                        color: localBackgroundTasksEnabled
+                          ? theme.colors.text
+                          : theme.colors.textTertiary,
+                      },
+                    ]}
+                  >
+                    在后台时通过悬浮窗获取本地剪贴板
+                  </Text>
+                </View>
+                <Switch
+                  value={localBackgroundTasksEnabled && localClipboardOverlayEnabled}
+                  onValueChange={handleToggleClipboardOverlay}
+                  trackColor={{ false: theme.colors.divider, true: theme.colors.primary }}
+                  thumbColor={
+                    localBackgroundTasksEnabled && localClipboardOverlayEnabled
+                      ? theme.colors.surface
+                      : theme.colors.textTertiary
+                  }
+                  disabled={!localBackgroundTasksEnabled}
+                />
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* 快捷操作部分 */}
         <View style={styles.section}>

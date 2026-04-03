@@ -829,7 +829,9 @@ export function HomeScreen() {
           console.log('[HomeScreen] App has gone to the background');
 
           // 后台同步启用时不停止轮询，让轮询在后台继续运行
-          const bgSyncEnabled = useSettingsStore.getState().config?.enableBackgroundSync;
+          const bgSyncEnabled =
+            useSettingsStore.getState().config?.enableBackgroundTasks &&
+            useSettingsStore.getState().config?.enableBackgroundSync;
           if (!bgSyncEnabled) {
             // 应用进入后台，停止轮询和 SignalR
             stopRemotePolling();
