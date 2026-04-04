@@ -5,6 +5,7 @@
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 import { AuthService } from './AuthService';
+import { APP_NAME, APP_VERSION } from '../constants';
 import { ProfileDto, ServerInfo } from '../types/api';
 import type { ClipboardContent } from '../types/clipboard';
 import { nativeDownloadFile, type ProgressInfo } from 'native-util';
@@ -117,6 +118,7 @@ export abstract class APIClient {
       timeout,
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': `${APP_NAME}/${APP_VERSION}`,
         ...headers,
       },
     });
@@ -303,7 +305,9 @@ export abstract class APIClient {
    * 获取包含认证信息的请求头
    */
   protected async getHeaders(): Promise<Record<string, string>> {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+      'User-Agent': `${APP_NAME}/${APP_VERSION}`,
+    };
 
     // 添加认证头
     if (this.authService?.isConfigured()) {
