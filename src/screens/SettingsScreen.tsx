@@ -170,6 +170,30 @@ export const SettingsScreen = () => {
     calculateStorageSizes();
   }, []);
 
+  // 刷新权限状态
+  const refreshPermissions = async () => {
+    if (Platform.OS !== 'android') return;
+    setIsRefreshingPermissions(true);
+    try {
+      const { PermissionsAndroid } = require('react-native');
+      const [notif, sms] = await Promise.all([
+        PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS),
+        PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECEIVE_SMS),
+      ]);
+      setPermNotification(notif);
+      setPermOverlay(hasOverlayPermission());
+      setPermSms(sms);
+    } catch (e) {
+      console.warn('[Settings] Failed to check permissions:', e);
+    } finally {
+      setIsRefreshingPermissions(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshPermissions();
+  }, []);
+
   // 自动检查更新（每天一次）
   useEffect(() => {
     if (!isLoaded) return;
@@ -212,6 +236,12 @@ export const SettingsScreen = () => {
   const [isCalculating, setIsCalculating] = useState<boolean>(true);
   const [isExportingLogs, setIsExportingLogs] = useState<boolean>(false);
   const exportLogsAbortControllerRef = useRef<AbortController | null>(null);
+
+  // 权限状态
+  const [permNotification, setPermNotification] = useState<boolean>(false);
+  const [permOverlay, setPermOverlay] = useState<boolean>(false);
+  const [permSms, setPermSms] = useState<boolean>(false);
+  const [isRefreshingPermissions, setIsRefreshingPermissions] = useState<boolean>(false);
 
   // 目录对象
   const cacheDir = CLIPBOARD_TEMP_DIR;
@@ -1221,6 +1251,76 @@ export const SettingsScreen = () => {
                       : theme.colors.textTertiary
                   }
                   disabled={!localBackgroundTasksEnabled}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* 权限管理部分 */}
+        {Platform.OS === 'android' && (
+          <View style={styles.section}>
+            <View style={[styles.sectionHeaderBase, styles.sectionHeaderRow]}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>权限管理</Text>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={refreshPermissions}
+                disabled={isRefreshingPermissions}
+              >
+                <RefreshCw color={theme.colors.primary} width={16} height={16} />
+              </TouchableOpacity>
+            </View>
+
+            <View
+              style={[
+                styles.card,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+              ]}
+            >
+              <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingLabel, { color: theme.colors.text }]}>通知权限</Text>
+                  <Text style={[styles.settingDescription, { color: theme.colors.textTertiary }]}>
+                    后台任务的前台服务通知所需
+                  </Text>
+                </View>
+                <Switch
+                  value={permNotification}
+                  onValueChange={() => Linking.openSettings()}
+                  trackColor={{ false: theme.colors.divider, true: theme.colors.primary }}
+                  thumbColor={permNotification ? theme.colors.surface : theme.colors.textTertiary}
+                />
+              </View>
+
+              <View style={[styles.settingRow, { borderBottomColor: theme.colors.divider }]}>
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingLabel, { color: theme.colors.text }]}>
+                    悬浮窗权限
+                  </Text>
+                  <Text style={[styles.settingDescription, { color: theme.colors.textTertiary }]}>
+                    后台通过悬浮窗获取剪贴板所需
+                  </Text>
+                </View>
+                <Switch
+                  value={permOverlay}
+                  onValueChange={() => requestOverlayPermission()}
+                  trackColor={{ false: theme.colors.divider, true: theme.colors.primary }}
+                  thumbColor={permOverlay ? theme.colors.surface : theme.colors.textTertiary}
+                />
+              </View>
+
+              <View style={styles.settingRowNoBorder}>
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingLabel, { color: theme.colors.text }]}>短信权限</Text>
+                  <Text style={[styles.settingDescription, { color: theme.colors.textTertiary }]}>
+                    自动上传短信验证码所需
+                  </Text>
+                </View>
+                <Switch
+                  value={permSms}
+                  onValueChange={() => Linking.openSettings()}
+                  trackColor={{ false: theme.colors.divider, true: theme.colors.primary }}
+                  thumbColor={permSms ? theme.colors.surface : theme.colors.textTertiary}
                 />
               </View>
             </View>
