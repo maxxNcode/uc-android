@@ -142,9 +142,7 @@ export abstract class APIClient {
         }
 
         // 日志：请求信息
-        if (__DEV__) {
-          console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`);
-        }
+        console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`);
 
         return config;
       },
@@ -157,9 +155,8 @@ export abstract class APIClient {
     this.client.interceptors.response.use(
       (response) => {
         // 日志：响应信息
-        if (__DEV__) {
-          console.log(`[API] Response ${response.status} ${response.config.url}`);
-        }
+        console.log(`[API] Response ${response.status} ${response.config.url}`);
+        
         return response;
       },
       (error) => {
