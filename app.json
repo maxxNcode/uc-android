@@ -31,6 +31,7 @@
     "plugins": [
       "./plugins/build/withNetworkSecurityConfig.js",
       "./plugins/build/withQuickSettingsTileManifest.js",
+      "./plugins/build/withProcessTextManifest.js",
       "./plugins/build/withAndroidNativeCode.js",
       "./plugins/build/withClipboardOverlayPermission.js",
       "./plugins/build/withNativeUtilPermission.js",

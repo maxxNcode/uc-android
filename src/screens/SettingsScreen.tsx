@@ -437,8 +437,8 @@ export const SettingsScreen = () => {
   const handleToggleBackgroundUpload = async (enabled: boolean) => {
     if (enabled) {
       Alert.alert(
-        '开启后台上传本地',
-        'Android 10 及以上的系统，应用在后台无法直接获取本地剪贴板内容，你可能需要启用悬浮窗或使用其他工具来解除此限制。',
+        '开启后台上传本地剪贴板',
+        '无需启用此选项，SyncClipboard 也支持从选中文字弹出的菜单直接上传文字。\n\nAndroid 10 及以上的系统，应用在后台无法直接获取本地剪贴板内容，你可能需要启用悬浮窗或使用其他工具绕过此限制。',
         [
           { text: '取消', style: 'cancel' },
           {

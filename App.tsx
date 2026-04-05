@@ -5,6 +5,7 @@ import { ThemeProvider } from './src/contexts/ThemeContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { QuickTileLoadingScreen } from './src/screens/QuickTileLoadingScreen';
 import { ShareReceiveScreen } from './src/screens/ShareReceiveScreen';
+import { ProcessTextScreen } from './src/screens/ProcessTextScreen';
 import { SyncDirection } from './src/types/sync';
 import { useSettingsStore } from './src/stores';
 import { initLogger } from './src/services/Logger';
@@ -14,6 +15,16 @@ import { moveTaskToBack } from 'native-util';
 
 const QUICK_UPLOAD_URL = 'syncclipboard://quick-upload';
 const QUICK_DOWNLOAD_URL = 'syncclipboard://quick-download';
+const PROCESS_TEXT_URL = 'syncclipboard://process-text';
+
+function parseProcessTextUrl(url: string | null): string | null {
+  if (!url || !url.startsWith(PROCESS_TEXT_URL)) return null;
+  try {
+    return new URL(url).searchParams.get('text');
+  } catch {
+    return null;
+  }
+}
 
 function parseQuickTileUrl(url: string | null): {
   isQuickTile: boolean;
@@ -45,6 +56,7 @@ export default function App() {
   const [appMode, setAppMode] = useState<AppMode>('checking');
   // 快速操作覆盖层：始终以 overlay 形式显示，不卸载 AppNavigator/HomeScreen
   const [shareReceiveOverlay, setShareReceiveOverlay] = useState(false);
+  const [processTextOverlay, setProcessTextOverlay] = useState<string | null>(null);
   const [quickActionOverlay, setQuickActionOverlay] = useState<{
     direction: SyncDirection;
     exitAfterSync: boolean;
@@ -100,6 +112,12 @@ export default function App() {
         setShareReceiveOverlay(true);
         return;
       }
+      const processText = parseProcessTextUrl(url);
+      if (processText) {
+        setAppMode('home');
+        setProcessTextOverlay(processText);
+        return;
+      }
       const { isQuickTile, fromForeground, direction } = parseQuickTileUrl(url);
       // 始终进入 home 模式（挂载 AppNavigator/HomeScreen 以启动后台任务）
       setAppMode('home');
@@ -116,6 +134,11 @@ export default function App() {
       }
       if (isShareIntentUrl(url)) {
         setShareReceiveOverlay(true);
+        return;
+      }
+      const processText = parseProcessTextUrl(url);
+      if (processText) {
+        setProcessTextOverlay(processText);
         return;
       }
       const { isQuickTile, fromForeground, direction } = parseQuickTileUrl(url);
@@ -155,6 +178,18 @@ export default function App() {
                   // 使用 moveTaskToBack 而非 exitApp，保持 Activity 存活以维持后台任务
                   moveTaskToBack();
                 }
+              }}
+            />
+          </View>
+        )}
+        {processTextOverlay && (
+          <View style={StyleSheet.absoluteFill}>
+            <ProcessTextScreen
+              text={processTextOverlay}
+              onComplete={() => {
+                setProcessTextOverlay(null);
+                // 使用 moveTaskToBack 而非 exitApp，保持 Activity 存活以维持后台任务
+                moveTaskToBack();
               }}
             />
           </View>

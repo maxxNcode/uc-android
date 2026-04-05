@@ -126,6 +126,13 @@ export class SyncManager {
   }
 
   /**
+   * 设置最后上传的 profile hash（供绕过 SyncManager.sync() 的直接上传路径设置，避免触发自动下载）
+   */
+  public setLastUploadedHash(hash: string): void {
+    this.lastLocalProfileHash = hash;
+  }
+
+  /**
    * 更新前台服务通知文本（自动附加时间戳）
    */
   public updateForegroundNotification(text: string): void {

@@ -9,7 +9,7 @@ import { View, ActivityIndicator, Text, StyleSheet, BackHandler } from 'react-na
 import { useIncomingShare, clearSharedPayloads, getSharedPayloads } from 'expo-sharing';
 import { useTheme } from '@/hooks/useTheme';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { uploadFileAndAddToHistory } from '@/utils/uploadFile';
+import { uploadFileAndAddToHistory, uploadTextAndAddToHistory } from '@/utils/uploadFile';
 import { QuickLoadingPage } from '@/components/QuickLoadingPage';
 import type { ProgressInfo } from 'native-util';
 
@@ -56,8 +56,20 @@ export const ShareReceiveScreen: React.FC<ShareReceiveScreenProps> = ({ onComple
       if (!activeServer) throw new Error('请先在设置中配置服务器');
 
       const payload = resolvedSharedPayloads[0];
-      if (!payload || !payload.contentUri) throw new Error('没有可处理的文件');
+      if (!payload) throw new Error('没有可处理的分享内容');
 
+      // 文字分享（text / url 类型，contentUri 为 null）
+      if (!payload.contentUri) {
+        const text = payload.value?.trim() || '';
+        if (!text) throw new Error('分享的文字内容为空');
+        setLoadingText('正在上传文字…');
+        setPreviewText(text.slice(0, 50));
+        await uploadTextAndAddToHistory(text, activeServer, { signal });
+        clearSharedPayloads();
+        return;
+      }
+
+      // 文件分享
       const contentMime = payload.contentMimeType;
       let fileName = payload.originalName;
       if (!fileName) {

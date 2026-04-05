@@ -6,12 +6,13 @@
 
 import { File } from 'expo-file-system';
 import { nativeCopyFile, type ProgressInfo } from 'native-util';
-import { calculateFileProfileHash } from '@/utils/hash';
+import { calculateFileProfileHash, calculateTextHash } from '@/utils/hash';
 import { prepareTempFilePath } from '@/utils/fileStorage';
 import { useHistoryStore } from '@/stores/historyStore';
 import { createAPIClient } from '@/services';
+import { SyncManager } from '@/services/SyncManager';
 import type { ClipboardContent } from '@/types/clipboard';
-import { createDefaultClipboardItem } from '@/types/clipboard';
+import { createDefaultClipboardItem, HistorySyncStatus } from '@/types/clipboard';
 import type { ClipboardContentType } from '@/types/api';
 import type { ServerConfig } from '@/types/api';
 
@@ -73,6 +74,39 @@ export async function importFileToHistory(
   };
 }
 
+export async function uploadTextAndAddToHistory(
+  text: string,
+  activeServer: ServerConfig,
+  options?: { signal?: AbortSignal }
+): Promise<void> {
+  const profileHash = await calculateTextHash(text, options?.signal);
+
+  // 预先设置 hash，避免 SignalR/轮询推送时误判为新远程内容触发自动下载
+  SyncManager.getInstance().setLastUploadedHash(profileHash);
+
+  const content: ClipboardContent = {
+    type: 'Text',
+    text,
+    profileHash,
+    localClipboardHash: profileHash,
+    hasData: false,
+    timestamp: Date.now(),
+  };
+
+  const apiClient = createAPIClient(activeServer);
+  await apiClient.putContent(content, { signal: options?.signal });
+
+  const historyItem = createDefaultClipboardItem({
+    type: 'Text',
+    text,
+    profileHash,
+    hasData: false,
+    timestamp: Date.now(),
+    syncStatus: HistorySyncStatus.Synced,
+  });
+  await useHistoryStore.getState().addItem(historyItem);
+}
+
 export async function uploadFileAndAddToHistory(
   sourceUri: string,
   fileName: string,
@@ -82,6 +116,9 @@ export async function uploadFileAndAddToHistory(
   options?: UploadFileOptions
 ): Promise<void> {
   const result = await importFileToHistory(sourceUri, fileName, mimeType, fileSize, options);
+
+  // 预先设置 hash，避免 SignalR/轮询推送时误判为新远程内容触发自动下载
+  SyncManager.getInstance().setLastUploadedHash(result.profileHash);
 
   const content: ClipboardContent = {
     type: result.contentType,
