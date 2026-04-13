@@ -22,7 +22,7 @@ describe('resolveRemoteContent', () => {
   });
 
   describe('当内容未变化时', () => {
-    it('应返回 null', async () => {
+    it('历史记录无文件时应返回 null', async () => {
       const content: ClipboardContent = {
         type: 'Image',
         text: 'photo.png',
@@ -35,6 +35,28 @@ describe('resolveRemoteContent', () => {
       const result = await resolveRemoteContent(content, 'AABBCC', 'AABBCC', true, deps);
 
       expect(result).toBeNull();
+    });
+
+    it('历史记录有文件时应返回 fileUriOnlyUpdate', async () => {
+      const content: ClipboardContent = {
+        type: 'Image',
+        text: 'photo.png',
+        profileHash: 'AABBCC',
+        fileName: 'photo.png',
+        fileSize: 5000,
+        hasData: true,
+      };
+
+      (deps.getHistoryFileUri as jest.Mock).mockResolvedValue(
+        'file:///data/history/Image/AABBCC/photo.png'
+      );
+
+      const result = await resolveRemoteContent(content, 'AABBCC', 'AABBCC', true, deps);
+
+      expect(result).not.toBeNull();
+      expect(result!.fileUriOnlyUpdate).toBe(true);
+      expect(result!.foundInHistory).toBe(true);
+      expect(result!.content.fileUri).toBe('file:///data/history/Image/AABBCC/photo.png');
     });
   });
 

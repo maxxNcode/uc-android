@@ -227,6 +227,12 @@ export function HomeScreen() {
       return;
     }
 
+    // hash 没变但 fileUri 更新了（例如快捷同步在后台下载了文件），只更新显示
+    if (resolved.fileUriOnlyUpdate) {
+      setRemoteContent(resolved.content);
+      return;
+    }
+
     // 如果是本地刚上传的内容，跳过自动下载/复制，仅更新显示
     if (resolved.isJustUploaded) {
       console.log(

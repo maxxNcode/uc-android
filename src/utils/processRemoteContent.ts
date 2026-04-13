@@ -27,6 +27,8 @@ export interface ProcessRemoteContentResult {
   isJustUploaded: boolean;
   /** 是否从历史记录中找到了本地文件 */
   foundInHistory: boolean;
+  /** hash 没变但 fileUri 更新了（例如快捷同步在后台下载了文件），只需更新显示 */
+  fileUriOnlyUpdate?: boolean;
 }
 
 /**
@@ -41,8 +43,28 @@ export async function resolveRemoteContent(
   hasData: boolean,
   deps: ProcessRemoteContentDeps
 ): Promise<ProcessRemoteContentResult | null> {
-  // 没有变化，不处理
+  // 没有变化：仍需检查历史记录中是否已有新下载的文件
+  // （例如快捷同步在后台下载了文件，但 HomeScreen 的 remoteContent 还没有 fileUri）
   if (previousHash === currentHash) {
+    if (hasData && content.profileHash && content.fileName) {
+      try {
+        const fileUri = await deps.getHistoryFileUri(
+          content.type,
+          content.profileHash,
+          content.fileName
+        );
+        if (fileUri) {
+          return {
+            content: { ...content, fileUri },
+            isJustUploaded: false,
+            foundInHistory: true,
+            fileUriOnlyUpdate: true,
+          };
+        }
+      } catch {
+        // ignore
+      }
+    }
     return null;
   }
 
