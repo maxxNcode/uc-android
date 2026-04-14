@@ -137,7 +137,7 @@ export function HomeScreen() {
   const isRemoteDownloading = !!remoteDownloadTask;
   const remoteDownloadProgress = remoteDownloadTask
     ? {
-        progress: remoteDownloadTask.progress / 100,
+        progress: remoteDownloadTask.progress < 0 ? 0 : remoteDownloadTask.progress / 100,
         bytesTransferred: remoteDownloadTask.bytesTransferred,
         totalBytes: remoteDownloadTask.totalBytes || 0,
       }
