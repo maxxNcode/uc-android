@@ -7,6 +7,7 @@ import React, { useState, forwardRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, Image, TouchableOpacity, Linking } from 'react-native';
 import { Copy, Download, Share, Link2, Scissors } from 'react-native-feather';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { StarIcon } from './StarIcon';
 import { useTheme } from '@/hooks/useTheme';
 import { ClipboardItem } from '@/types/clipboard';
 import { useTransferQueueStore } from '@/stores/transferQueueStore';
@@ -398,10 +399,10 @@ export const HistoryListItem = forwardRef<object, HistoryListItemProps>(
                     onPress={() => onToggleStar(item)}
                     hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
                   >
-                    <MaterialCommunityIcons
-                      name={item.starred ? 'star' : 'star-outline'}
+                    <StarIcon
                       size={ACTION_ICON_SIZE}
                       color={theme.colors.primary}
+                      filled={!!item.starred}
                     />
                   </TouchableOpacity>
                 )}
