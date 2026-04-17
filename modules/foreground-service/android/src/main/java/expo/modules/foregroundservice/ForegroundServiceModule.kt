@@ -56,6 +56,8 @@ class ForegroundServiceModule : Module() {
         Function("stopService") {
             val context = appContext.reactContext ?: return@Function false
             if (!SyncForegroundService.isRunning) return@Function true
+            // 标记为用户主动停止，避免 onDestroy 中误发重启通知
+            SyncForegroundService.stoppedByUser = true
             val intent = Intent(context, SyncForegroundService::class.java)
             context.stopService(intent)
             true

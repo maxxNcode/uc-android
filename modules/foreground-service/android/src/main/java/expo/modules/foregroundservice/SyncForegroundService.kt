@@ -33,9 +33,9 @@ class SyncForegroundService : Service() {
         var isRunning = false
             private set
 
-        /** 标记是否为用户主动停止（ACTION_STOP / ACTION_TEMP_STOP），
+        /** 标记是否为用户主动停止（ACTION_STOP / ACTION_TEMP_STOP / JS 侧 stopService），
          *  区分系统杀掉与用户操作，onDestroy 时据此决定是否发通知 */
-        private var stoppedByUser = false
+        internal var stoppedByUser = false
     }
 
     private var notificationManager: NotificationManager? = null
