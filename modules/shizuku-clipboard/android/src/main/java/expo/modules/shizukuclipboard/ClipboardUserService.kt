@@ -18,6 +18,24 @@ class ClipboardUserService : IClipboardUserService.Stub() {
         // UserService 以 UID 2000 (shell) 运行，需要使用 shell 的包名
         private const val PACKAGE_NAME = "com.android.shell"
 
+        init {
+            // 当 Shizuku 以 root 权限运行时，UserService 进程继承 UID 0。
+            // 剪贴板服务会校验 callingPackage 对应的 UID 是否匹配 Binder.getCallingUid()，
+            // "com.android.shell"(UID 2000) 与 root(UID 0) 不匹配，导致访问被拒绝。
+            // 修复：将进程身份从 root 切换到 shell，使 UID 与 PACKAGE_NAME 一致。
+            // UserService 运行在独立进程（processNameSuffix="clipboard"）中，不影响 Shizuku 主进程。
+            if (android.os.Process.myUid() == 0) {
+                try {
+                    // setgid 必须在 setuid 之前调用，因为 setuid 后将失去 root 权限
+                    android.system.Os.setgid(2000)
+                    android.system.Os.setuid(2000)
+                    android.util.Log.i(TAG, "Switched UID/GID from root(0) to shell(2000) for clipboard access")
+                } catch (e: Exception) {
+                    android.util.Log.e(TAG, "Failed to switch UID from root to shell", e)
+                }
+            }
+        }
+
         private var clipboardService: Any? = null
 
         private fun getClipboardService(): Any? {
