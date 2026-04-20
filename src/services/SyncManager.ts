@@ -703,7 +703,9 @@ export class SyncManager {
       // 显示系统 Toast 通知
       if (result.success && !result.skipped && Platform.OS === 'android') {
         const preview = this.getContentPreview(content);
-        ToastAndroid.show(`已上传\n${preview}`, ToastAndroid.SHORT);
+        if (appConfig?.syncToastEnabled !== false) {
+          ToastAndroid.show(`已上传\n${preview}`, ToastAndroid.SHORT);
+        }
         this.updateForegroundNotification(`已上传: ${preview}`);
       }
     };
