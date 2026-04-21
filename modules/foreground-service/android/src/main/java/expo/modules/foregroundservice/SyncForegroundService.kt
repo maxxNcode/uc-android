@@ -8,9 +8,7 @@ import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import expo.modules.nativeutil.NativeLogger
 import androidx.core.app.NotificationCompat
 
@@ -51,6 +49,20 @@ class SyncForegroundService : Service() {
         when (intent?.action) {
             ACTION_START, null -> {
                 NativeLogger.d(TAG, "Starting foreground, intent action=${intent?.action}")
+
+                // 系统 START_STICKY 重启时：
+                //   - intent 为 null：系统直接重启
+                //   - intent.action == ACTION_START 但 jsInitiatedService == false：
+                //     系统重投了上次的 ACTION_START intent，JS 并未实际运行
+                // 以上两种情况：JS 不存在，不启动前台服务，仅发重启引导通知
+                if (intent == null || !ForegroundServiceModule.isJsRuntimeAlive()) {
+                    NativeLogger.w(TAG, "Service restarted by system (intent=${intent?.action}, jsAlive=${ForegroundServiceModule.isJsRuntimeAlive()}), JS not running, showing restart notification")
+                    showRestartNotification()
+                    stoppedByUser = true  // 防止 onDestroy 再次发重启通知
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+
                 val notification = createNotification("后台任务运行中")
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     startForeground(NOTIFY_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
@@ -59,19 +71,6 @@ class SyncForegroundService : Service() {
                 }
                 NativeLogger.d(TAG, "startForeground called successfully")
                 isRunning = true
-
-                // 系统 START_STICKY 重启时 intent 为 null，延迟检查 JS 线程是否存活
-                if (intent == null) {
-                    NativeLogger.w(TAG, "Service restarted by system (intent=null), checking JS runtime...")
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        if (!ForegroundServiceModule.isJsRuntimeAlive()) {
-                            NativeLogger.w(TAG, "JS runtime not available, showing restart notification")
-                            showRestartNotification()
-                        } else {
-                            NativeLogger.d(TAG, "JS runtime is alive after system restart")
-                        }
-                    }, 3000)
-                }
             }
             ACTION_STOP -> {
                 NativeLogger.d(TAG, "Stopping foreground service (permanent)")
@@ -126,6 +125,16 @@ class SyncForegroundService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        NativeLogger.d(TAG, "onTaskRemoved: user swiped app from recents, stopping service")
+        stoppedByUser = true
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+        isRunning = false
+        ForegroundServiceModule.sendTempStopEvent()
+    }
 
     override fun onDestroy() {
         NativeLogger.d(TAG, "onDestroy called, stoppedByUser=$stoppedByUser, isRunning=$isRunning")

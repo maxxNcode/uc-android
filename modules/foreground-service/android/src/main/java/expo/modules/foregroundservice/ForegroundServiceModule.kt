@@ -11,6 +11,14 @@ class ForegroundServiceModule : Module() {
     companion object {
         private var moduleInstance: ForegroundServiceModule? = null
 
+        /**
+         * JS 端主动调用 startService() 后置为 true，表示 JS 业务逻辑确实在运行。
+         * 进程重建时静态字段重置为 false；模块销毁时（JS bridge 关闭）也重置为 false。
+         * 仅凭 RN bridge 初始化（moduleInstance != null）无法说明 JS 任务在执行，
+         * 因为 START_STICKY 重启时 bridge 可能在后台静默初始化却不运行任何业务代码。
+         */
+        private var jsInitiatedService = false
+
         fun sendStopEvent() {
             moduleInstance?.sendEvent("onStopRequested", emptyMap<String, Any>())
         }
@@ -20,7 +28,7 @@ class ForegroundServiceModule : Module() {
         }
 
         fun isJsRuntimeAlive(): Boolean {
-            return moduleInstance != null
+            return jsInitiatedService
         }
     }
 
@@ -34,6 +42,7 @@ class ForegroundServiceModule : Module() {
         }
 
         OnDestroy {
+            jsInitiatedService = false
             if (moduleInstance == this@ForegroundServiceModule) {
                 moduleInstance = null
             }
@@ -42,6 +51,7 @@ class ForegroundServiceModule : Module() {
         Function("startService") {
             if (SyncForegroundService.isRunning) return@Function true
             val context = appContext.reactContext ?: return@Function false
+            jsInitiatedService = true
             val intent = Intent(context, SyncForegroundService::class.java).apply {
                 action = SyncForegroundService.ACTION_START
             }
