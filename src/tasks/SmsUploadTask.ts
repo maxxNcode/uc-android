@@ -32,7 +32,8 @@ export function extractVerificationCode(body: string): string | null {
   try {
     const { extractVerificationCode: nativeExtract } = require('sms-forwarder');
     return nativeExtract(body);
-  } catch {
+  } catch (e) {
+    console.error('[SmsUploadTask] extractVerificationCode native call failed:', e);
     return null;
   }
 }

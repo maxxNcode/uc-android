@@ -310,6 +310,9 @@ export class ClipboardMonitor {
         useSettingsStore.getState().config?.enableBackgroundUpload;
       if (!bgUploadEnabled) {
         // 应用进入后台，停止监听
+        console.log(
+          '[ClipboardMonitor] Background upload disabled, stopping polling (app went to background/inactive)'
+        );
         this.stopPolling();
       }
     }

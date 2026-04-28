@@ -186,7 +186,10 @@ class SmsHeadlessTaskService : HeadlessJsTaskService() {
         val extras: Bundle = intent?.extras ?: return null
         val from = extras.getString("from", "")
         val body = extras.getString("body", "")
-        if (body.isNullOrEmpty()) return null
+        if (body.isNullOrEmpty()) {
+            NativeLogger.w(TAG, "getTaskConfig: body is null or empty, skipping task (from=$from)")
+            return null
+        }
 
         NativeLogger.d(TAG, "Creating headless task config for SMS from=$from")
 
