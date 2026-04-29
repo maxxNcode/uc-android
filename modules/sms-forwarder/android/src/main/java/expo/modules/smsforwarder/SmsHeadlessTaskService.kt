@@ -139,19 +139,33 @@ class SmsHeadlessTaskService : HeadlessJsTaskService() {
     private var isSuccessPosted = false
 
     override fun onCreate() {
-        super.onCreate()
+        NativeLogger.d(TAG, "[A] onCreate entered (before super.onCreate) — process=${android.os.Process.myPid()}")
+        try {
+            super.onCreate()
+            NativeLogger.d(TAG, "[B] super.onCreate() returned successfully")
+        } catch (e: Exception) {
+            NativeLogger.e(TAG, "[B] super.onCreate() threw ${e.javaClass.simpleName}: ${e.message}", e)
+            throw e
+        }
         instance = this
         pendingSuccessCode = null
+        NativeLogger.d(TAG, "[C] Building foreground notification")
         val notification = buildStaticNotification(this, "SyncClipboard", "正在处理短信验证码…")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+            NativeLogger.d(TAG, "[D] startForeground() completed")
+        } catch (e: Exception) {
+            NativeLogger.e(TAG, "[D] startForeground() threw ${e.javaClass.simpleName}: ${e.message}", e)
+            throw e
         }
-        NativeLogger.d(TAG, "SmsHeadlessTaskService created, foreground notification posted")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        NativeLogger.d(TAG, "[E] onStartCommand entered, action=${intent?.action}, startId=$startId")
         // "取消"按钮触发
         if (intent?.action == ACTION_DISMISS) {
             NativeLogger.d(TAG, "Dismiss action received, stopping service")

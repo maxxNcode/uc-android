@@ -44,22 +44,30 @@ class StaticSmsReceiver : BroadcastReceiver() {
     /**
      * 启动 Headless JS 任务 Service，在后台执行验证码提取与上传。
      * 使用 startForegroundService 以满足 Android 8+ 后台 Service 启动限制。
+     *
+     * acquireWakeLockNow 必须在 startForegroundService 之前调用：
+     * BroadcastReceiver 自带的 WakeLock 在 onReceive 返回后立即释放，
+     * 若 CPU 在 Service 创建前休眠则任务永远无法启动。
      */
     private fun startHeadlessTask(context: Context, from: String, body: String) {
         try {
+            NativeLogger.d(TAG, "[1/4] Acquiring WakeLock before starting service")
+            HeadlessJsTaskService.acquireWakeLockNow(context)
+
             val serviceIntent = Intent(context, SmsHeadlessTaskService::class.java).apply {
                 putExtra("from", from)
                 putExtra("body", body)
             }
+            NativeLogger.d(TAG, "[2/4] Calling start${if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) "Foreground" else ""}Service for SMS from=$from")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(serviceIntent)
             } else {
                 context.startService(serviceIntent)
             }
-            HeadlessJsTaskService.acquireWakeLockNow(context)
-            NativeLogger.d(TAG, "Headless task service started for SMS from=$from")
+            NativeLogger.d(TAG, "[3/4] startService call returned (service may not be created yet)")
         } catch (e: Exception) {
-            NativeLogger.e(TAG, "Failed to start headless task service", e)
+            NativeLogger.e(TAG, "[4/4] Failed to start headless task service: ${e.javaClass.simpleName}: ${e.message}", e)
         }
+        NativeLogger.d(TAG, "[4/4] startHeadlessTask completed, onReceive will now return")
     }
 }
