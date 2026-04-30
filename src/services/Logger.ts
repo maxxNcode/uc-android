@@ -3,6 +3,7 @@ import { Paths, Directory, File } from 'expo-file-system';
 import { StorageAccessFramework } from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 import { nativeZipFiles } from 'native-util';
+import * as Application from 'expo-application';
 
 const LOG_DIR = new Directory(Paths.document, 'logs');
 const MAX_LOG_DAYS = 3;
@@ -117,6 +118,23 @@ export function initLogger(config?: Partial<LogConfig>): void {
   isInitialized = true;
 
   cleanOldLogs();
+  logSystemInfo();
+}
+
+function logSystemInfo(): void {
+  if (Platform.OS !== 'android') return;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const c = (Platform as any).constants;
+  const appVersion = Application.nativeApplicationVersion ?? 'unknown';
+  const buildVersion = Application.nativeBuildVersion ?? 'unknown';
+  const androidRelease: string = c?.Release ?? 'unknown';
+  const apiLevel: number = Platform.Version as number;
+  const model: string = c?.Model ?? 'unknown';
+  const manufacturer: string = c?.manufacturer ?? 'unknown';
+  logInstance.info(
+    `App started | version: ${appVersion} (build ${buildVersion}) | ` +
+      `Android ${androidRelease} (API ${apiLevel}) | ${manufacturer} ${model}`
+  );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
