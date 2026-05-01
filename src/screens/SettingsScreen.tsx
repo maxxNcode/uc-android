@@ -1433,7 +1433,7 @@ export const SettingsScreen = () => {
 
             <View
               style={[
-                styles.settingRow,
+                styles.settingRowNoBorder,
                 { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.colors.divider },
               ]}
             >
