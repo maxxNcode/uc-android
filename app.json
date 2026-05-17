@@ -20,7 +20,8 @@
       "versionCode": 151,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundImage": "./assets/adaptive-icon-bg.png",
+        "monochromeImage": "./assets/adaptive-icon-mono.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "app.uniclipboard.android",
