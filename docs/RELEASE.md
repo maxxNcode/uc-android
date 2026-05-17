@@ -24,12 +24,12 @@ every published artifact, including beta builds. The rule is simple:
 
 > Every published tag bumps `versionCode` by 1.
 
-| Release | version | versionCode |
-| ------- | ------- | ----------- |
-| v1.0.11-beta1 | 1.0.11 | 151 |
-| v1.0.11 | 1.0.11 | 152 |
-| v1.0.12-beta1 | 1.0.12 | 153 |
-| v1.0.12 | 1.0.12 | 154 |
+| Release       | version | versionCode |
+| ------------- | ------- | ----------- |
+| v1.0.11-beta1 | 1.0.11  | 151         |
+| v1.0.11       | 1.0.11  | 152         |
+| v1.0.12-beta1 | 1.0.12  | 153         |
+| v1.0.12       | 1.0.12  | 154         |
 
 This guarantees that any user who installed an earlier build (stable or beta)
 can upgrade to a newer one.
@@ -99,7 +99,7 @@ Routine:
 
    ```
    fix: handle sync retry after token refresh
-   
+
    Ref: Jeric-X/syncclipboard-mobile@abc1234
    ```
 
@@ -165,12 +165,12 @@ pre-release.
 
 ## Identifier Reference
 
-| Field | Value |
-| ----- | ----- |
-| Android package | `app.uniclipboard.android` |
-| iOS bundle | `app.uniclipboard.ios` |
-| App display name | `UniClip` |
-| Expo slug | `uniclip` |
+| Field            | Value                      |
+| ---------------- | -------------------------- |
+| Android package  | `app.uniclipboard.android` |
+| iOS bundle       | `app.uniclipboard.ios`     |
+| App display name | `UniClip`                  |
+| Expo slug        | `uniclip`                  |
 
 These are independent namespaces from upstream. UniClip can be installed
 alongside any other SyncClipboard-protocol client on the same device.
