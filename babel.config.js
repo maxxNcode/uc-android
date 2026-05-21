@@ -1,5 +1,9 @@
 module.exports = function (api) {
-  api.cache(true);
+  // 平台敏感缓存:让 web/android 使用不同的 babel 配置
+  const platform = api.caller((caller) => (caller && caller.platform) || 'unknown');
+  api.cache.using(() => platform);
+  const isWeb = platform === 'web';
+
   return {
     presets: ['babel-preset-expo'],
     plugins: [
@@ -7,7 +11,17 @@ module.exports = function (api) {
         'module-resolver',
         {
           root: ['./src'],
-          extensions: ['.ios.js', '.android.js', '.js', '.ts', '.tsx', '.json'],
+          extensions: [
+            '.web.tsx',
+            '.web.ts',
+            '.web.js',
+            '.ios.js',
+            '.android.js',
+            '.js',
+            '.ts',
+            '.tsx',
+            '.json',
+          ],
           alias: {
             '@': './src',
             '@components': './src/components',
@@ -20,8 +34,13 @@ module.exports = function (api) {
             '@navigation': './src/navigation',
             '@hooks': './src/hooks',
             '@assets': './src/assets',
-            'native-util': './modules/native-util/src',
-            'shortcut': './modules/shortcut/src',
+            // web 平台跳过原生模块 alias,让 metro resolver 接管(映射到 stub)
+            ...(isWeb
+              ? {}
+              : {
+                  'native-util': './modules/native-util/src',
+                  shortcut: './modules/shortcut/src',
+                }),
           },
         },
       ],
