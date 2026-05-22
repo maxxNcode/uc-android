@@ -221,8 +221,8 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
       url: url.trim(),
       username: username.trim(),
       password: password.trim(),
+      ...(serverName.trim() ? { name: serverName.trim() } : {}),
       ...(type === 's3' && {
-        name: serverName.trim() || undefined,
         region: region.trim() || 'us-east-1',
         bucketName: bucketName.trim(),
         objectPrefix: objectPrefix.trim(),

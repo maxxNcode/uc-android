@@ -1,22 +1,59 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet, Linking, ToastAndroid, StatusBar, View, Platform } from 'react-native';
+import { StyleSheet, Linking, ToastAndroid, StatusBar, View, Platform, Alert } from 'react-native';
 import { useEffect, useState } from 'react';
 import { ThemeProvider } from './src/contexts/ThemeContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { navigateIfReady } from './src/navigation/navigationRef';
 import { QuickTileLoadingScreen } from './src/screens/QuickTileLoadingScreen';
 import { ShareReceiveScreen } from './src/screens/ShareReceiveScreen';
 import { ProcessTextScreen } from './src/screens/ProcessTextScreen';
 import { SyncDirection } from './src/types/sync';
-import { useSettingsStore } from './src/stores';
+import { useSettingsStore, usePendingConnectStore } from './src/stores';
 import { initLogger } from './src/services/Logger';
 import { useTheme } from './src/hooks/useTheme';
 import { setDynamicShortcuts } from 'shortcut';
 import { moveTaskToBack, setExcludeFromRecents } from 'native-util';
 import { getBackgroundServiceManager } from './src/services/BackgroundServiceManager';
+import {
+  parseConnectUri,
+  CONNECT_URI_ERROR_MESSAGES,
+  CONNECT_URI_SCHEME,
+  CONNECT_URI_HOST,
+} from './src/utils/connectUri';
 
 const QUICK_UPLOAD_URL = 'uniclipboard://quick-upload';
 const QUICK_DOWNLOAD_URL = 'uniclipboard://quick-download';
 const PROCESS_TEXT_URL = 'uniclipboard://process-text';
+const CONNECT_URL_PREFIX = `${CONNECT_URI_SCHEME}://${CONNECT_URI_HOST}`;
+
+/**
+ * 检测并处理 uniclipboard://connect 接入凭据 URI。
+ * 解析成功 → 写入 pendingConnectStore + 切到 Settings tab，让 SettingsScreen 弹出预填表单。
+ * 解析失败 → 弹 Alert 提示错误文案。
+ *
+ * 安全：本函数绝不 log URI 原文或 payload。
+ * 返回值：true 表示本 URL 是 connect URI（无论成败，主流程应短路）。
+ */
+function handleConnectUrlIfMatched(url: string | null | undefined): boolean {
+  if (!url || !url.startsWith(CONNECT_URL_PREFIX)) return false;
+  const parsed = parseConnectUri(url);
+  if (!parsed.ok) {
+    console.log(`[QR][deeplink] failed: ${parsed.error}`);
+    Alert.alert('扫码失败', CONNECT_URI_ERROR_MESSAGES[parsed.error]);
+    return true;
+  }
+  console.log('[QR][deeplink] succeeded');
+  usePendingConnectStore.getState().set({
+    url: parsed.value.url,
+    user: parsed.value.user,
+    pwd: parsed.value.pwd,
+    ...(parsed.value.label !== undefined ? { label: parsed.value.label } : {}),
+  });
+  // 切到 Settings tab；若 navigation 尚未就绪（冷启动早期），SettingsScreen 的 useEffect
+  // 会在挂载完成时主动检测 store 并打开预填表单。
+  navigateIfReady('Settings');
+  return true;
+}
 
 function parseProcessTextUrl(url: string | null): string | null {
   if (!url || !url.startsWith(PROCESS_TEXT_URL)) return null;
@@ -93,7 +130,15 @@ export default function App() {
     // Cold start: app launched via URL scheme
     Linking.getInitialURL().then((url) => {
       if (config?.debugUrlScheme) {
-        ToastAndroid.show(`getInitialURL: ${url ?? 'null'}`, ToastAndroid.LONG);
+        // 注意：connect URI 含明文密码，debug 模式仅显示 prefix 防泄漏
+        const safeForDebug =
+          url && url.startsWith(CONNECT_URL_PREFIX) ? `${CONNECT_URL_PREFIX}?<redacted>` : url;
+        ToastAndroid.show(`getInitialURL: ${safeForDebug ?? 'null'}`, ToastAndroid.LONG);
+      }
+      // connect URI 优先短路，进 home 模式让 SettingsScreen 挂载
+      if (handleConnectUrlIfMatched(url)) {
+        setAppMode('home');
+        return;
       }
       if (isShareIntentUrl(url)) {
         setAppMode('home');
@@ -118,7 +163,12 @@ export default function App() {
     // Hot start: app already running, receives URL deep link event
     const urlSub = Linking.addEventListener('url', ({ url }) => {
       if (config?.debugUrlScheme) {
-        ToastAndroid.show(`addEventListener url: ${url ?? 'null'}`, ToastAndroid.LONG);
+        const safeForDebug =
+          url && url.startsWith(CONNECT_URL_PREFIX) ? `${CONNECT_URL_PREFIX}?<redacted>` : url;
+        ToastAndroid.show(`addEventListener url: ${safeForDebug ?? 'null'}`, ToastAndroid.LONG);
+      }
+      if (handleConnectUrlIfMatched(url)) {
+        return;
       }
       if (isShareIntentUrl(url)) {
         setShareReceiveOverlay(true);

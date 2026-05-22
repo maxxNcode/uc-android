@@ -5,6 +5,7 @@
 import React from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { navigationRef } from './navigationRef';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
 import { HomeScreen } from '@/screens/HomeScreen';
@@ -42,7 +43,7 @@ export const AppNavigator = () => {
       };
 
   return (
-    <NavigationContainer theme={navigationTheme}>
+    <NavigationContainer ref={navigationRef} theme={navigationTheme}>
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerStyle: {

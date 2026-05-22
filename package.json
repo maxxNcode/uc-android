@@ -35,6 +35,7 @@
     "axios": "^1.13.5",
     "expo": "~55.0.0",
     "expo-application": "~55.0.8",
+    "expo-camera": "~55.0.19",
     "expo-clipboard": "~55.0.8",
     "expo-crypto": "~55.0.9",
     "expo-document-picker": "~55.0.8",

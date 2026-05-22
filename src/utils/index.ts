@@ -83,3 +83,6 @@ export * from './fileStorage';
 
 // Export config utilities
 export * from './config';
+
+// Export connect URI parser
+export * from './connectUri';

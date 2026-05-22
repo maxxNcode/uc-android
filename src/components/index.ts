@@ -15,3 +15,4 @@ export { TopRightMenu } from './TopRightMenu';
 export type { MenuItemConfig } from './TopRightMenu';
 export { QuickLoadingPage } from './QuickLoadingPage';
 export type { QuickLoadingPageProps } from './QuickLoadingPage';
+export { QrScannerModal } from './QrScannerModal';

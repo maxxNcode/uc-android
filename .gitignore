@@ -102,6 +102,11 @@ coverage/
 syncclipboard-mobile.code-workspace
 tmpclaude-*-cwd
 
+# Planning files (planning-with-files skill)
+task_plan.md
+findings.md
+progress.md
+
 # build output
 /android/
 /ios/

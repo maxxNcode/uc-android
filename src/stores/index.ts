@@ -8,3 +8,4 @@ export { useSyncStore } from './syncStore';
 export { useHistoryStore } from './historyStore';
 export { useSettingsStore } from './settingsStore';
 export { useClipboardSyncServiceStore as useClipboardSyncServiceStore } from './ClipboardSyncServiceStore';
+export { usePendingConnectStore, type PendingConnectIntent } from './pendingConnectStore';

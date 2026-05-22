@@ -25,8 +25,8 @@ import { CLIPBOARD_TEMP_DIR } from '@/utils/fileStorage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/useTheme';
 import type { ThemeMode, PaletteId } from '@/theme';
-import { useSettingsStore } from '@/stores';
-import { ServerConfigModal, ServerListItem, MessageToast } from '@/components';
+import { useSettingsStore, usePendingConnectStore } from '@/stores';
+import { ServerConfigModal, ServerListItem, MessageToast, QrScannerModal } from '@/components';
 import { ServerConfig } from '@/types/api';
 import { useMessageToast } from '@/hooks/useMessageToast';
 import {
@@ -88,6 +88,10 @@ export const SettingsScreen = () => {
   const [showServerModal, setShowServerModal] = useState(false);
   const [editingServerIndex, setEditingServerIndex] = useState<number | null>(null);
   const [serversCollapsed, setServersCollapsed] = useState(true);
+  const [showScannerModal, setShowScannerModal] = useState(false);
+  const [prefillFromScan, setPrefillFromScan] = useState<ServerConfig | null>(null);
+  const consumePendingConnect = usePendingConnectStore((s) => s.consume);
+  const pendingConnectIntent = usePendingConnectStore((s) => s.intent);
   const { message, showMessage, handleMessageShown } = useMessageToast();
 
   // 本地状态用于跟踪Switch的当前值，避免闪烁
@@ -361,11 +365,68 @@ export const SettingsScreen = () => {
     }
   }, []);
 
-  // 处理添加服务器
-  const handleAddServer = () => {
+  // 打开手动表单（新建态）
+  const openManualAddForm = () => {
     setEditingServerIndex(null);
+    setPrefillFromScan(null);
     setShowServerModal(true);
   };
+
+  // 用扫码/深链解析出的凭据预填表单
+  const openPrefilledAddForm = (config: ServerConfig) => {
+    setEditingServerIndex(null);
+    setPrefillFromScan(config);
+    setShowServerModal(true);
+  };
+
+  // 检查 pendingConnectStore，有数据就打开预填表单
+  const tryConsumePendingConnect = () => {
+    const intent = consumePendingConnect();
+    if (!intent) return false;
+    openPrefilledAddForm({
+      type: 'syncclipboard',
+      url: intent.url,
+      username: intent.user,
+      password: intent.pwd,
+      ...(intent.label ? { name: intent.label } : {}),
+    });
+    return true;
+  };
+
+  // 处理添加服务器 — 让用户选「扫码 / 手动」
+  const handleAddServer = () => {
+    Alert.alert(
+      '添加服务器',
+      '选择添加方式',
+      [
+        {
+          text: '扫描二维码',
+          onPress: () => setShowScannerModal(true),
+        },
+        {
+          text: '手动填写',
+          onPress: openManualAddForm,
+        },
+        { text: '取消', style: 'cancel' },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  // ScannerModal 关闭：只关闭，consume 由下面的 useEffect 统一处理
+  const handleScannerClose = () => {
+    setShowScannerModal(false);
+  };
+
+  // 统一的 consume 时机：pendingIntent 出现且无其它 modal 打开时
+  // 覆盖三个来源：1) 扫码 modal 成功扫到后关闭；2) 深链冷启动（intent 在 Settings 挂载前就被 set）；
+  // 3) 深链热启动（intent 在 Settings 已挂载时被 set）。
+  // 若用户正在编辑/扫码，intent 留在 store 里，等用户关闭当前 modal 后下一帧再处理。
+  useEffect(() => {
+    if (pendingConnectIntent && !showServerModal && !showScannerModal) {
+      tryConsumePendingConnect();
+    }
+  }, [pendingConnectIntent, showServerModal, showScannerModal]);
 
   // 处理编辑服务器
   const handleEditServer = (index: number) => {
@@ -2642,11 +2703,19 @@ export const SettingsScreen = () => {
       {/* 服务器配置模态框 */}
       <ServerConfigModal
         visible={showServerModal}
-        onClose={() => setShowServerModal(false)}
+        onClose={() => {
+          setShowServerModal(false);
+          setPrefillFromScan(null);
+        }}
         onSave={handleSaveServer}
-        initialConfig={editingServerIndex !== null ? servers[editingServerIndex] : undefined}
+        initialConfig={
+          editingServerIndex !== null ? servers[editingServerIndex] : (prefillFromScan ?? undefined)
+        }
         isEditing={editingServerIndex !== null}
       />
+
+      {/* 扫码 Modal */}
+      <QrScannerModal visible={showScannerModal} onClose={handleScannerClose} />
 
       {/* 测试验证码短信模态框 */}
       <Modal
