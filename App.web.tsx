@@ -375,7 +375,12 @@ const type = {
   displayMedium: { fontSize: 45, lineHeight: 52, fontWeight: '400' } as TextStyle,
   headlineSmall: { fontSize: 24, lineHeight: 32, fontWeight: '400' } as TextStyle,
   titleLarge: { fontSize: 22, lineHeight: 28, fontWeight: '500' } as TextStyle,
-  titleMedium: { fontSize: 16, lineHeight: 24, fontWeight: '500', letterSpacing: 0.15 } as TextStyle,
+  titleMedium: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '500',
+    letterSpacing: 0.15,
+  } as TextStyle,
   titleSmall: { fontSize: 14, lineHeight: 20, fontWeight: '500', letterSpacing: 0.1 } as TextStyle,
   bodyLarge: { fontSize: 16, lineHeight: 24, fontWeight: '400', letterSpacing: 0.5 } as TextStyle,
   bodyMedium: { fontSize: 14, lineHeight: 20, fontWeight: '400', letterSpacing: 0.25 } as TextStyle,
@@ -485,7 +490,10 @@ export default function App() {
           <M3ListItem
             c={c}
             leading={
-              <LeadingImageThumb url="https://picsum.photos/seed/uniclip-h1/120/120" radius={shape.md} />
+              <LeadingImageThumb
+                url="https://picsum.photos/seed/uniclip-h1/120/120"
+                radius={shape.md}
+              />
             }
             headline="screenshot.png"
             supporting="2 小时前 · 图片 · 245 KB"
@@ -530,10 +538,7 @@ export default function App() {
 
         <ButtonShowcase c={c} />
 
-        <SectionLabel
-          c={c}
-          icon={<Palette size={16} color={c.onSurfaceVariant} strokeWidth={2} />}
-        >
+        <SectionLabel c={c} icon={<Palette size={16} color={c.onSurfaceVariant} strokeWidth={2} />}>
           色板 · M3 Tonal Surface
         </SectionLabel>
 
@@ -615,12 +620,7 @@ function SegmentedThemeSwitcher({
                 style={{ marginRight: space(2) }}
               />
             )}
-            <Text
-              style={[
-                type.labelLarge,
-                { color: active ? c.onPrimaryContainer : c.onSurface },
-              ]}
-            >
+            <Text style={[type.labelLarge, { color: active ? c.onPrimaryContainer : c.onSurface }]}>
               {opt.label}
             </Text>
           </Pressable>
@@ -643,10 +643,7 @@ function SectionLabel({
     <View style={styles.sectionLabel}>
       {icon}
       <Text
-        style={[
-          type.labelLarge,
-          { color: c.onSurfaceVariant, marginLeft: icon ? space(2) : 0 },
-        ]}
+        style={[type.labelLarge, { color: c.onSurfaceVariant, marginLeft: icon ? space(2) : 0 }]}
       >
         {children}
       </Text>
@@ -672,12 +669,7 @@ function ClipboardCardFilled({
   source: string;
 }) {
   return (
-    <View
-      style={[
-        styles.cardFilled,
-        { backgroundColor: c.surfaceContainerHigh },
-      ]}
-    >
+    <View style={[styles.cardFilled, { backgroundColor: c.surfaceContainerHigh }]}>
       <View style={styles.cardHeader}>
         <LeadingIconAvatar bg={c.primaryContainer} fg={c.onPrimaryContainer} icon={icon} />
         <View style={{ flex: 1, marginLeft: space(3) }}>
@@ -782,12 +774,7 @@ function ClipboardCardImage({
 
 function ErrorCard({ c }: { c: M3Scheme }) {
   return (
-    <View
-      style={[
-        styles.cardFilled,
-        { backgroundColor: c.errorContainer },
-      ]}
-    >
+    <View style={[styles.cardFilled, { backgroundColor: c.errorContainer }]}>
       <View style={styles.cardHeader}>
         <View
           style={{
@@ -1162,9 +1149,7 @@ function ColorPicker({
                   },
                 ]}
               >
-                <View
-                  style={[styles.colorSwatch, { backgroundColor: p.swatch }]}
-                >
+                <View style={[styles.colorSwatch, { backgroundColor: p.swatch }]}>
                   {active && <Check size={20} color="#FFFFFF" strokeWidth={3} />}
                 </View>
               </View>
@@ -1204,12 +1189,7 @@ function ExtendedFAB({ c }: { c: M3Scheme }) {
         ]}
       >
         <Plus size={20} color={c.onPrimaryContainer} strokeWidth={2.5} />
-        <Text
-          style={[
-            type.labelLarge,
-            { color: c.onPrimaryContainer, marginLeft: space(2) },
-          ]}
-        >
+        <Text style={[type.labelLarge, { color: c.onPrimaryContainer, marginLeft: space(2) }]}>
           新建
         </Text>
       </Pressable>
@@ -1229,7 +1209,9 @@ function TonalPaletteGrid({ c }: { c: M3Scheme }) {
     { key: 'surfaceContainerHighest', label: 'surfaceContainerHighest' },
   ];
   return (
-    <View style={{ borderRadius: shape.lg, overflow: 'hidden', backgroundColor: c.surfaceContainerLow }}>
+    <View
+      style={{ borderRadius: shape.lg, overflow: 'hidden', backgroundColor: c.surfaceContainerLow }}
+    >
       {swatches.map((s) => {
         const isOnLight = !isDarkColor(c[s.key]);
         const textColor = isOnLight ? '#1D1B20' : '#FFFFFF';
@@ -1244,7 +1226,9 @@ function TonalPaletteGrid({ c }: { c: M3Scheme }) {
             }}
           >
             <Text style={[type.labelLarge, { color: textColor, flex: 1 }]}>{s.label}</Text>
-            <Text style={[type.bodySmall, { color: alpha(textColor, 0.7), fontFamily: 'monospace' }]}>
+            <Text
+              style={[type.bodySmall, { color: alpha(textColor, 0.7), fontFamily: 'monospace' }]}
+            >
               {c[s.key]}
             </Text>
           </View>

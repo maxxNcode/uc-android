@@ -68,7 +68,9 @@ function isNonEmptyString(v: unknown): v is string {
  */
 function splitConnectUri(raw: string): { scheme: string; host: string; query: string } | null {
   // 匹配 scheme://host(/path 可选忽略)(?query 可选)#fragment 可选
-  const m = raw.match(/^([a-zA-Z][a-zA-Z0-9+\-.]*):\/\/([^/?#]+)(?:\/[^?#]*)?(?:\?([^#]*))?(?:#.*)?$/);
+  const m = raw.match(
+    /^([a-zA-Z][a-zA-Z0-9+\-.]*):\/\/([^/?#]+)(?:\/[^?#]*)?(?:\?([^#]*))?(?:#.*)?$/
+  );
   if (!m) return null;
   return { scheme: m[1], host: m[2], query: m[3] ?? '' };
 }

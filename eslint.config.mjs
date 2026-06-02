@@ -16,6 +16,7 @@ export default [
       'build/**',
       'plugins/build/**',
       'modules/*/build/**',
+      'web-stubs/**',
       '*.config.js',
       'babel.config.js',
       'jest.config.js',

@@ -58,7 +58,6 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ visible, onClose
       requestPermission();
     }
     // 只在 visible 跳变时请求；permission 自然刷新由 hook 处理
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const handleBarcodeScanned = useCallback(
@@ -144,7 +143,10 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ visible, onClose
         <View style={styles.permissionBody}>
           <Text style={[styles.permissionTitle, { color: theme.colors.text }]}>需要相机权限</Text>
           <Text
-            style={[styles.permissionDesc, { color: theme.colors.textSecondary ?? theme.colors.text }]}
+            style={[
+              styles.permissionDesc,
+              { color: theme.colors.textSecondary ?? theme.colors.text },
+            ]}
           >
             UniClip 需要访问相机来扫描接入二维码。
             {canAskAgain ? '' : '\n\n权限已被永久拒绝，请在系统设置中手动开启。'}

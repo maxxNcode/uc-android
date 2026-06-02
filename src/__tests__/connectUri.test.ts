@@ -30,7 +30,11 @@ describe('parseConnectUri — positive', () => {
   it('payload 无 o 时不抛错，label 缺失', () => {
     // {"v":1,"url":"http://a.b","user":"abcdef","pwd":"p"} → base64url
     const json = '{"v":1,"url":"http://a.b","user":"abcdef","pwd":"p"}';
-    const p = Buffer.from(json, 'utf-8').toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+    const p = Buffer.from(json, 'utf-8')
+      .toString('base64')
+      .replace(/=+$/, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
     const uri = `uniclipboard://connect?v=1&svc=mobile-sync&p=${p}`;
     const r = parseConnectUri(uri);
     expect(r.ok).toBe(true);
@@ -42,7 +46,11 @@ describe('parseConnectUri — positive', () => {
 
   it('o.label 非字符串时被忽略', () => {
     const json = '{"v":1,"url":"http://a.b","user":"abcdef","pwd":"p","o":{"label":42}}';
-    const p = Buffer.from(json, 'utf-8').toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+    const p = Buffer.from(json, 'utf-8')
+      .toString('base64')
+      .replace(/=+$/, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
     const r = parseConnectUri(`uniclipboard://connect?v=1&svc=mobile-sync&p=${p}`);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.value.label).toBeUndefined();
@@ -116,14 +124,22 @@ describe('parseConnectUri — 边界', () => {
   it('payload v=2 → UNSUPPORTED_VERSION', () => {
     // {"v":2,"url":"http://a.b","user":"abcdef","pwd":"p"}
     const json = '{"v":2,"url":"http://a.b","user":"abcdef","pwd":"p"}';
-    const p = Buffer.from(json, 'utf-8').toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+    const p = Buffer.from(json, 'utf-8')
+      .toString('base64')
+      .replace(/=+$/, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
     const r = parseConnectUri(`uniclipboard://connect?v=1&svc=mobile-sync&p=${p}`);
     expect(r).toEqual({ ok: false, error: 'UNSUPPORTED_VERSION' });
   });
 
   it('payload 是 JSON 但不是对象 → PAYLOAD_DECODE_FAILED', () => {
     const json = '[1,2,3]';
-    const p = Buffer.from(json, 'utf-8').toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+    const p = Buffer.from(json, 'utf-8')
+      .toString('base64')
+      .replace(/=+$/, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
     const r = parseConnectUri(`uniclipboard://connect?v=1&svc=mobile-sync&p=${p}`);
     expect(r).toEqual({ ok: false, error: 'PAYLOAD_DECODE_FAILED' });
   });
