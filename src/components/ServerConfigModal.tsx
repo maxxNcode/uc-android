@@ -261,7 +261,7 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
                   { color: theme.colors.primary },
                 ]}
               >
-                保存
+                Save
               </Text>
             </TouchableOpacity>
           </View>
@@ -275,7 +275,7 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
             {/* 服务器类型 */}
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
-                服务器类型
+                 Server Type
               </Text>
               <View
                 style={[
@@ -295,10 +295,10 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
                 >
                   <View style={styles.typeContent}>
                     <Text style={[styles.typeLabel, { color: theme.colors.text }]}>
-                      SyncClipboard 服务器
+                      SyncClipboard Server
                     </Text>
                     <Text style={[styles.typeDescription, { color: theme.colors.textSecondary }]}>
-                      官方独立服务器或客户端内置服务器
+                      Official standalone server or built-in server
                     </Text>
                   </View>
                   {type === 'syncclipboard' && (
@@ -318,10 +318,10 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
                 >
                   <View style={styles.typeContent}>
                     <Text style={[styles.typeLabel, { color: theme.colors.text }]}>
-                      WebDAV 服务器
+                      WebDAV Server
                     </Text>
                     <Text style={[styles.typeDescription, { color: theme.colors.textSecondary }]}>
-                      支持 WebDAV 协议的云存储服务
+                      Cloud storage with WebDAV support
                     </Text>
                   </View>
                   {type === 'webdav' && (
@@ -340,10 +340,10 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
                 >
                   <View style={styles.typeContent}>
                     <Text style={[styles.typeLabel, { color: theme.colors.text }]}>
-                      S3 兼容存储
+                      S3 Compatible
                     </Text>
                     <Text style={[styles.typeDescription, { color: theme.colors.textSecondary }]}>
-                      AWS S3 / MinIO / Cloudflare R2 等
+                      AWS S3 / MinIO / Cloudflare R2 etc.
                     </Text>
                   </View>
                   {type === 's3' && (
@@ -358,7 +358,7 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
             {/* 服务器信息 */}
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
-                连接信息
+                 Connection
               </Text>
               <View
                 style={[
@@ -369,7 +369,7 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
                 {type === 's3' ? (
                   <>
                     <View style={styles.inputGroup}>
-                      <Text style={[styles.inputLabel, { color: theme.colors.text }]}>名称</Text>
+                      <Text style={[styles.inputLabel, { color: theme.colors.text }]}>Name</Text>
                       <TextInput
                         style={[
                           styles.input,
@@ -393,7 +393,7 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
 
                     <View style={styles.inputGroup}>
                       <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-                        存储桶名称 *
+                        Bucket Name *
                       </Text>
                       <TextInput
                         ref={bucketNameRef}
@@ -498,7 +498,7 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
                     </View>
 
                     <View style={styles.inputGroup}>
-                      <Text style={[styles.inputLabel, { color: theme.colors.text }]}>区域</Text>
+                      <Text style={[styles.inputLabel, { color: theme.colors.text }]}>Region</Text>
                       <TextInput
                         ref={regionRef}
                         style={[
@@ -523,7 +523,7 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
 
                     <View style={styles.inputGroup}>
                       <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-                        对象前缀
+                        Object Prefix
                       </Text>
                       <TextInput
                         ref={objectPrefixRef}
@@ -548,7 +548,7 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
 
                     <View style={styles.switchGroup}>
                       <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-                        路径风格寻址
+                        Path-Style Addressing
                       </Text>
                       <Switch
                         value={forcePathStyle}
@@ -560,14 +560,14 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
                       />
                     </View>
                     <Text style={[styles.hintText, { color: theme.colors.textTertiary }]}>
-                      建议 S3 兼容服务器启用路径风格寻址
+                      Recommended for S3-compatible servers
                     </Text>
                   </>
                 ) : (
                   <>
                     <View style={styles.inputGroup}>
                       <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-                        服务器地址
+                        Server URL
                       </Text>
                       <TextInput
                         ref={urlRef}
@@ -593,7 +593,7 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
                     </View>
 
                     <View style={styles.inputGroup}>
-                      <Text style={[styles.inputLabel, { color: theme.colors.text }]}>用户名</Text>
+                      <Text style={[styles.inputLabel, { color: theme.colors.text }]}>Username</Text>
                       <TextInput
                         ref={usernameRef}
                         style={[
@@ -617,7 +617,7 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
                     </View>
 
                     <View style={styles.inputGroup}>
-                      <Text style={[styles.inputLabel, { color: theme.colors.text }]}>密码</Text>
+                      <Text style={[styles.inputLabel, { color: theme.colors.text }]}>Password</Text>
                       <TextInput
                         ref={passwordRef}
                         style={[
@@ -664,11 +664,11 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({
             >
               {isTesting ? (
                 <Text style={[styles.testButtonText, { color: theme.colors.onErrorContainer }]}>
-                  取消测试
+                  Cancel Test
                 </Text>
               ) : (
                 <Text style={[styles.testButtonText, { color: theme.colors.onPrimaryContainer }]}>
-                  测试连接
+                  Test Connection
                 </Text>
               )}
             </TouchableOpacity>

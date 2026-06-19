@@ -51,7 +51,7 @@ export async function contentToProfileDto(
     case 'Image':
       return {
         type: 'Image',
-        text: text || '[图片]',
+        text: text || '[Image]',
         hash: profileHash,
         hasData: true,
         dataName: fileName,
@@ -61,7 +61,7 @@ export async function contentToProfileDto(
     case 'File':
       return {
         type: 'File',
-        text: text || fileName || '[文件]',
+        text: text || fileName || '[File]',
         hash: profileHash,
         hasData: true,
         dataName: fileName,
@@ -71,7 +71,7 @@ export async function contentToProfileDto(
     case 'Group':
       return {
         type: 'Group',
-        text: text || '[文件组]',
+        text: text || '[Files]',
         hash: profileHash,
         hasData: true,
         dataName: fileName,

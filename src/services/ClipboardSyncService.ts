@@ -652,9 +652,9 @@ class ClipboardSyncService {
               finalContent.type === 'Text' && finalContent.text
                 ? finalContent.text.trim().replace(/\s+/g, ' ').slice(0, 30)
                 : finalContent.fileName || finalContent.type;
-            SyncManager.getInstance().updateForegroundNotification(`已下载: ${preview}`);
+            SyncManager.getInstance().updateForegroundNotification(`Downloaded: ${preview}`);
             if (config?.syncToastEnabled !== false) {
-              ToastAndroid.show(`已下载\n${preview}`, ToastAndroid.SHORT);
+              ToastAndroid.show(`Downloaded\n${preview}`, ToastAndroid.SHORT);
             }
           }
         } catch (error) {
@@ -907,9 +907,9 @@ class ClipboardSyncService {
               ? content.text.trim().replace(/\s+/g, ' ').slice(0, 30)
               : content.fileName || content.type;
           const { SyncManager } = require('./SyncManager');
-          SyncManager.getInstance().updateForegroundNotification(`已上传: ${preview}`);
+          SyncManager.getInstance().updateForegroundNotification(`Uploaded: ${preview}`);
           if (config?.syncToastEnabled !== false) {
-            ToastAndroid.show(`已上传\n${preview}`, ToastAndroid.SHORT);
+            ToastAndroid.show(`Uploaded\n${preview}`, ToastAndroid.SHORT);
           }
           // 上传成功后静默刷新远程显示
           this.fetchRemoteClipboard(true).catch(() => {});

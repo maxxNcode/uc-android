@@ -378,7 +378,7 @@ export class HistorySyncService {
 
         await this.notifyProgress({
           phase: 'fetching',
-          message: `${progressMessage}... (${allRecords.length} 条)`,
+          message: `${progressMessage}... (${allRecords.length})`,
           current: allRecords.length,
         });
       }
