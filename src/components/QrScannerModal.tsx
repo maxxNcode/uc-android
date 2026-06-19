@@ -69,15 +69,15 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ visible, onClose
       if (!parsed.ok) {
         const code: ConnectUriError = parsed.error;
         console.log(`[QR] scan failed: ${code}`);
-        Alert.alert('扫码失败', CONNECT_URI_ERROR_MESSAGES[code], [
+        Alert.alert('Scan Failed', CONNECT_URI_ERROR_MESSAGES[code], [
           {
-            text: '重新扫描',
+            text: 'Rescan',
             onPress: () => {
               scanLockRef.current = false;
             },
           },
           {
-            text: '关闭',
+            text: 'Close',
             style: 'cancel',
             onPress: onClose,
           },
@@ -111,7 +111,7 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ visible, onClose
         onPress={() => setTorchOn((v) => !v)}
         style={[styles.headerButton, { backgroundColor: 'rgba(0,0,0,0.4)' }]}
       >
-        <Text style={styles.headerButtonText}>{torchOn ? '关灯' : '手电'}</Text>
+        <Text style={styles.headerButtonText}>{torchOn ? 'Off' : 'Flashlight'}</Text>
       </TouchableOpacity>
     </View>
   );

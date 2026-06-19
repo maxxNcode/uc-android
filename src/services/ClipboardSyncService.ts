@@ -267,8 +267,8 @@ class ClipboardSyncService {
       await this.fetchRemoteClipboard(false);
     } catch (error) {
       const { useErrorStore } = require('../stores/errorStore');
-      const errorMessage = error instanceof Error ? error.message : '刷新失败';
-      useErrorStore.getState().setError({ title: '刷新失败', message: errorMessage });
+      const errorMessage = error instanceof Error ? error.message : 'Refresh failed';
+      useErrorStore.getState().setError({ title: 'Refresh failed', message: errorMessage });
     }
   }
 
@@ -434,8 +434,8 @@ class ClipboardSyncService {
       // 立即获取一次（非静默，显示加载状态；错误写入 errorStore）
       await this.fetchRemoteClipboard(false).catch((error: Error) => {
         const { useErrorStore } = require('../stores/errorStore');
-        const errorMessage = error?.message ?? '无法连接到服务器';
-        useErrorStore.getState().setError({ title: '连接失败', message: errorMessage });
+        const errorMessage = error?.message ?? 'Unable to connect to server';
+        useErrorStore.getState().setError({ title: 'Connection Failed', message: errorMessage });
       });
     }
   }
@@ -485,8 +485,8 @@ class ClipboardSyncService {
       // 连接后立即获取一次（非静默；错误写入 errorStore）
       await this.fetchRemoteClipboard(false).catch((error: Error) => {
         const { useErrorStore } = require('../stores/errorStore');
-        const errorMessage = error?.message ?? '无法连接到服务器';
-        useErrorStore.getState().setError({ title: '连接失败', message: errorMessage });
+        const errorMessage = error?.message ?? 'Unable to connect to server';
+        useErrorStore.getState().setError({ title: 'Connection Failed', message: errorMessage });
       });
     } catch (e) {
       console.error('[ClipboardSyncService] Failed to connect SignalR:', e);
@@ -731,7 +731,7 @@ class ClipboardSyncService {
           const { useSettingsStore } = require('../stores/settingsStore');
           const config = useSettingsStore.getState().config;
           if (config?.syncToastEnabled !== false) {
-            ToastAndroid.show('文件已下载', ToastAndroid.SHORT);
+            ToastAndroid.show('File downloaded', ToastAndroid.SHORT);
           }
         }
         store.setDownloadingRemote(false);
@@ -978,11 +978,11 @@ class ClipboardSyncService {
     signal: AbortSignal
   ): Promise<void> {
     const server = this.activeServer;
-    if (!server) throw new Error('请先在设置中配置服务器');
+    if (!server) throw new Error('Configure a server in Settings first');
 
     const { useClipboardSyncServiceStore } = require('../stores/ClipboardSyncServiceStore');
     const store = useClipboardSyncServiceStore.getState();
-    store.setFileUploadProgress({ stage: '正在处理文件…', progress: null });
+    store.setFileUploadProgress({ stage: 'Processing file...', progress: null });
 
     try {
       const { uploadFileAndAddToHistory } = await import('../utils/uploadFile');
